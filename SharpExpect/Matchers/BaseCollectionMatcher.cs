@@ -4,7 +4,7 @@ using SharpExpect.Matchers;
 
 namespace SharpExpect
 {
-	public class BaseCollectionMatcher<TCollection, TItem, M> : BaseObjectMatcher<TCollection, M>
+	public class BaseCollectionMatcher<TCollection, TItem, M> : BaseEnumerableMatcher<TCollection, TItem, M>
 		where TCollection : ICollection<TItem>
 		where M : BaseCollectionMatcher<TCollection, TItem, M>
 	{

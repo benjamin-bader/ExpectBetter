@@ -55,6 +55,8 @@
     <Compile Include="Matchers\BaseCollectionMatcher.cs" />
     <Compile Include="Matchers\CollectionMatcher.cs" />
     <Compile Include="Matchers\FunctionMatcher.cs" />
+    <Compile Include="Matchers\BaseEnumerableMatcher.cs" />
+    <Compile Include="Matchers\EnumerableMatcher.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
