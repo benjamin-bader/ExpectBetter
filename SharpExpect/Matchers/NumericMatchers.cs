@@ -90,6 +90,24 @@ namespace SharpExpect.Matchers
 			return actual >= 0;
 		}
 	}
+	
+	public class UInt32Matcher : BaseMatcher<uint, UInt32Matcher>
+	{
+		public virtual bool ToBeGreaterThan(uint expected)
+		{
+			return actual > expected;
+		}
+		
+		public virtual bool ToBeLessThan(uint expected)
+		{
+			return actual < expected;
+		}
+		
+		public virtual bool ToEqual(uint expected)
+		{
+			return actual == expected;
+		}
+	}
 
 	public class Int64Matcher : BaseMatcher<long, Int64Matcher>
 	{
@@ -111,6 +129,24 @@ namespace SharpExpect.Matchers
 		public virtual bool ToBePositive()
 		{
 			return actual >= 0;
+		}
+	}
+	
+	public class UInt64Matcher : BaseMatcher<ulong, UInt64Matcher>
+	{
+		public virtual bool ToBeGreaterThan(ulong expected)
+		{
+			return actual > expected;
+		}
+		
+		public virtual bool ToBeLessThan(ulong expected)
+		{
+			return actual < expected;
+		}
+		
+		public virtual bool ToEqual(ulong expected)
+		{
+			return actual == expected;
 		}
 	}
 
@@ -230,6 +266,22 @@ namespace SharpExpect.Matchers
 		public virtual bool ToBePositive()
 		{
 			return actual >= 0;
+		}
+	}
+
+	public class IntPtrMatcher : BaseMatcher<IntPtr, IntPtrMatcher>
+	{
+		public virtual bool ToBeZero()
+		{
+			return actual == IntPtr.Zero;
+		}
+	}
+	
+	public class UIntPtrMatcher : BaseMatcher<UIntPtr, UIntPtrMatcher>
+	{
+		public virtual bool ToBeZero()
+		{
+			return actual == UIntPtr.Zero;
 		}
 	}
 }

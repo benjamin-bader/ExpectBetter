@@ -10,10 +10,10 @@ namespace SharpExpect
 		{
 			var o = new object();
 
-			Expect.The (o).Not.ToBeNull ();
-			Expect.The ("foo").Not.ToBeNull ();
-			Expect.The ("foo").ToBeLongerThan("uh");
-			Expect.The<string>("foo").ToBeLessThan("zanzibar");
+//			Expect.The (o).Not.ToBeNull ();
+//			Expect.The ("foo").Not.ToBeNull ();
+//			Expect.The ("foo").ToBeLongerThan("uh");
+//			Expect.The<string>("foo").ToBeLessThan("zanzibar");
 		}
 	}
 
@@ -34,46 +34,49 @@ namespace SharpExpect
 		}
 	}
 
+	public class Base
+	{
+		protected int actual;
+	}
+
+	public class Derived : Base
+	{
+		public Derived (int a)
+		{
+			actual = a; 
+		}
+	}
+
 	public class Driver
 	{
-		private static void Demo<TExn>(Action action)
-			where TExn : Exception
-		{
-			try
-			{
-				action();
-				Console.WriteLine("No exception here!");
-			}
-			catch (TExn)
-			{
-				Console.WriteLine("Caught a specific exception");
-			}
-			catch (Exception)
-			{
-				Console.WriteLine("Caught a general exception");
-			}
-		}
-
 		public static void Main(string[] args)
 		{
-			Demo<InvalidOperationException>(() => { });
-			Demo<InvalidOperationException>(() => { throw new InvalidOperationException(); });
-			Demo<InvalidOperationException>(() => { throw new DivideByZeroException(); });
-
-			var wrapped = ClassWrapper.Wrap<string, StringMatcher>("foo");
+			//var wrapped = ClassWrapper.Wrap<string, StringMatcher>("foo");
 
 #if DEBUG
 			// ClassWrapper.SaveAssembly();
 #endif
-			wrapped.ToBeLongerThan("oo");
-			wrapped.ToContain ("oo");
-			wrapped.Not.ToContain("bar");
+//			wrapped.ToBeLongerThan("oo");
+//			wrapped.ToContain("oo");
+//			wrapped.Not.ToContain("bar");
+//
+//			Expect.The(() =>
+//			{
+//				throw new DivideByZeroException();
+//				return 1;
+//			}).ToThrow<DivideByZeroException>();
 
-			Expect.The(() =>
-			           {
-							throw new DivideByZeroException();
-							return 1;
-						}).ToThrow<InvalidOperationException>();
+			try
+			{
+				Expect.The(0).ToBeGreaterThan(-1);
+			}
+			catch (InvalidProgramException ex)
+			{
+				Console.WriteLine("BOOM!  {0}", ex);
+#if DEBUG
+				ClassWrapper.SaveAssembly();
+#endif
+			}
 
 			Console.WriteLine ("hello");
 			Console.ReadKey();

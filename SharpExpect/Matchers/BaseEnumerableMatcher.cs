@@ -10,6 +10,11 @@ namespace SharpExpect.Matchers
 		where TEnumerable : IEnumerable<TItem>
 		where M : BaseEnumerableMatcher<TEnumerable, TItem, M>
 	{
+		public virtual bool ToBeEmpty()
+		{
+			return actual.Count() == 0;
+		}
+
 		public virtual bool ToContain(TItem expected, IEqualityComparer<TItem> comparer)
 		{
 			if (comparer == null)

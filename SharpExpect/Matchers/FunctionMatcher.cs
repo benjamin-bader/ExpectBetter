@@ -13,15 +13,13 @@ namespace SharpExpect.Matchers
 			{
 				actual();
 			}
+			catch (TException)
+			{
+				System.Diagnostics.Debug.WriteLine("caught an expected exception!");
+				return true;
+			}
 			catch (Exception ex)
 			{
-				if (ex is TException)
-				{
-					// a 'catch (TException)' block would be so much nicer - oh well.
-					System.Diagnostics.Debug.WriteLine("caught an expected exception!");
-					return true;
-				}
-
 				// todo(ben): set a meaningful description once non-default descriptions are in
 			}
 

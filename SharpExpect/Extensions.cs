@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SharpExpect
 {
@@ -51,11 +52,8 @@ namespace SharpExpect
 					yield return array[i];
 					i = (i + 1) % len;
 				}
-
-				yield break;
 			}
-
-			if (collection is IList<T>)
+			else if (collection is IList<T>)
 			{
 				var list = (IList<T>) collection;
 
@@ -72,17 +70,54 @@ namespace SharpExpect
 					yield return list[i];
 					i = (i + 1) % len;
 				}
-
-				yield break;
 			}
-
-			while (true)
+			else
 			{
-				foreach (var item in collection)
+				while (true)
 				{
-					yield return item;
+					foreach (var item in collection)
+					{
+						yield return item;
+					}
 				}
 			}
+		}
+
+		/// <summary>
+		/// Partition the specified collection using the given predicate.
+		/// </summary>
+		/// <param name='collection'>
+		/// The collection to be partitioned.
+		/// </param>
+		/// <param name='predicate'>
+		/// The predicate with which to partition.
+		/// </param>
+		/// <typeparam name='T'>
+		/// The type of element contained in the given collection.
+		/// </typeparam>
+		/// <returns>
+		/// A tuple containing two enumerations, one containing elements for
+		/// which <paramref name="predicate"/> returned <see langword="true"/>,
+		/// the second containing elements for which it returned <see langword="false"/>.
+		/// </returns>			
+		public static Tuple<IEnumerable<T>, IEnumerable<T>> Partition<T>(this IEnumerable<T> collection, Predicate<T> predicate)
+		{
+			var trues = new List<T>();
+			var falses = new List<T>();
+
+			foreach (var element in collection)
+			{
+				if (predicate(element))
+				{
+					trues.Add(element);
+				}
+				else
+				{
+					falses.Add(element);
+				}
+			}
+
+			return Tuple.Create(trues.AsEnumerable(), falses.AsEnumerable());
 		}
 
 		/// <summary>

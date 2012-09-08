@@ -29,7 +29,8 @@ namespace SharpTests
 
 			// todo(ben): InvalidProgramException at .ToBeTrue(), IL_0007: ceq
 			// Since we're here, we can assume that .ToContain didn't throw, so this isn't the end of the world.
-			//Expect.The(result).ToBeTrue();
+			//
+			Expect.The(result).ToBeTrue();
 		}
 
 		[Test]

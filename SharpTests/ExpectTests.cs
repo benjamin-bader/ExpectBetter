@@ -30,6 +30,8 @@ namespace SharpTests
 			Expect.The(Expect.The(d)).ToBeAnInstanceOf(typeof(DoubleMatcher));
 			Expect.The(Expect.The(m)).ToBeAnInstanceOf(typeof(DecimalMatcher));
 
+			Expect.The(b).ToEqual(b);
+
 			Expect.The(() => { throw new NotImplementedException(); }).ToThrow(typeof(InvalidCastException));
 		}
 	}

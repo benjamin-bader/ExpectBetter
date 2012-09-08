@@ -21,6 +21,11 @@ namespace SharpExpect
 			return ClassWrapper.Wrap<IComparable<T>, ComparableMatcher<T>>(actual);
 		}
 
+		public static EnumerableMatcher<T> The<T>(IEnumerable<T> actual)
+		{
+			return ClassWrapper.Wrap<IEnumerable<T>, EnumerableMatcher<T>>(actual);
+		}
+
 		public static CollectionMatcher<T> The<T>(ICollection<T> actual)
 		{
 			return ClassWrapper.Wrap<ICollection<T>, CollectionMatcher<T>>(actual);
@@ -74,6 +79,16 @@ namespace SharpExpect
 		public static DecimalMatcher The(decimal actual)
 		{
 			return ClassWrapper.Wrap<decimal, DecimalMatcher>(actual);
+		}
+
+		public static UIntPtrMatcher The(UIntPtr actual)
+		{
+			return ClassWrapper.Wrap<UIntPtr, UIntPtrMatcher>(actual);
+		}
+		
+		public static IntPtrMatcher The(IntPtr actual)
+		{
+			return ClassWrapper.Wrap<IntPtr, IntPtrMatcher>(actual);
 		}
 
 		public static ActionMatcher The(Action actual)

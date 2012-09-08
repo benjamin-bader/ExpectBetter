@@ -35,6 +35,14 @@ namespace SharpExpect
 			moduleBuilder = assemblyBuilder.DefineDynamicModule(AssemblyName, AssemblyFileName);
 		}
 
+#if DEBUG
+		public static void SaveAssembly()
+		{
+			System.IO.File.Delete(AssemblyFileName);
+			assemblyBuilder.Save(AssemblyFileName);
+		}
+#endif
+
 		public static M Wrap<T, M> (T actual)
 			where M : BaseMatcher<T, M>
 		{
@@ -101,6 +109,18 @@ namespace SharpExpect
 
 			foreach (var mi in @base.GetMethods (BindingFlags.Instance | BindingFlags.Public))
 			{
+				// The strategy here is to override each test method such that it
+				// handles nullness properly and blows up when the test method fails.
+				//
+				// for each public method not declared in System.Object
+				//   ensure it is virtual
+				//   ensure it returns a bool
+				//   match generic parameters & constraints, if present in base
+				//   if base is annotated with [AllowNullActual] and actual is not a value type, emit a null check.
+				//   call the base with the given arguments
+				//   if (retVal ^ inverted) call ClassWrapper.BadMatch
+				//   return retVal
+
 				if (mi.IsSpecialName || typeof(object) == mi.DeclaringType)
 				{
 					continue;
@@ -123,6 +143,11 @@ namespace SharpExpect
 					MethodAttributes.Public | MethodAttributes.Virtual,
 					typeof(bool),
 					Array.ConvertAll (parameters, p => p.ParameterType));
+				
+				if (mi.IsGenericMethod)
+				{
+					DefineGenericParameters(wrapper, mi);
+				}
 
 				var actualCanBeNull = mi.GetCustomAttributes(typeof(AllowNullActualAttribute), true).Length > 0;
 				var il = wrapper.GetILGenerator();
@@ -139,6 +164,7 @@ namespace SharpExpect
 
 				for (var i = 0; i < parameters.Length; ++i)
 				{
+					Console.WriteLine("Method {0}: loading arg {1}", mi.Name, i + 1);
 					EmitLdArg(il, i + 1);
 				}
 
@@ -182,7 +208,7 @@ namespace SharpExpect
 				// Expected arg array
 				il.Emit (OpCodes.Ldloc_1);
 
-				// Call (which throws)
+				// Call BadMatch (which throws)
 				il.Emit (OpCodes.Call, BadMatchInfo);
 
 				il.MarkLabel(lblOk);
@@ -191,12 +217,6 @@ namespace SharpExpect
 			}
 
 			var createdType = builder.CreateType();
-
-#if DEBUG
-			//System.IO.File.Delete(assemblyName.Name + ".dll");
-			//assemblyBuilder.Save (assemblyName.Name + ".dll");
-#endif
-
 			var method = new DynamicMethod("construct", typeof(object), new[] { typeof(object) }, moduleBuilder);
 			var mil = method.GetILGenerator();
 
@@ -224,6 +244,65 @@ namespace SharpExpect
 			return result;
 		}
 
+		/// <summary>
+		/// Replicates the base method's generic arguments and their constraints.
+		/// </summary>
+		/// <param name='wrapper'>
+		/// The <see cref="MethodBuilder"/> constructing the override.
+		/// </param>
+		/// <param name='mi'>
+		/// The <see cref="MethodInfo"/> representing the base method.
+		/// </param>
+		/// <exception cref="InvalidProgramException">
+		/// Thrown when more than one base-type constraint is present on a parameter.
+		/// This shouldn't happen, but malformed IL could theoretically cause this.
+		/// </exception>
+		private static void DefineGenericParameters(MethodBuilder wrapper, MethodInfo mi)
+		{
+			var arguments = mi.GetGenericArguments();
+			var names = Array.ConvertAll(arguments, arg => arg.Name);
+			var parameters = wrapper.DefineGenericParameters(names);
+
+			for (var i = 0; i < arguments.Length; ++i)
+			{
+				var arg = arguments[i];
+				var p = parameters[i];
+				var constraintsAndBaseType = arg.GetGenericParameterConstraints().Partition(t => t.IsInterface);
+				var interfaces = constraintsAndBaseType.Item1.ToArray();
+				var baseTypeArray = constraintsAndBaseType.Item2.ToArray();
+
+				if ((arg.GenericParameterAttributes & GenericParameterAttributes.None) != GenericParameterAttributes.None)
+				{
+					p.SetGenericParameterAttributes(arg.GenericParameterAttributes);
+				}
+
+				if (interfaces.Length > 0)
+				{
+					p.SetInterfaceConstraints(interfaces);
+				}
+
+				if (baseTypeArray.Length == 1)
+				{
+					p.SetBaseTypeConstraint(baseTypeArray[0]);
+				}
+				else if (baseTypeArray.Length > 1)
+				{
+					throw new InvalidProgramException("How can a type possibly have more than one base class constraint?");
+				}
+			}
+		}
+
+		/// <summary>
+		/// Emits an instruction to load the argument from the given constant
+		/// index, using the most efficient encoding.
+		/// </summary>
+		/// <param name='il'>
+		/// The <see cref="ILGenerator"/> that should emit the instruction.
+		/// </param>
+		/// <param name='index'>
+		/// The argument index.  For instance methods, an index of zero
+		/// corresponds to the <see langword="this"/> keyword.
+		/// </param>
 		private static void EmitLdArg (ILGenerator il, int index)
 		{
 			switch (index)
@@ -245,6 +324,17 @@ namespace SharpExpect
 			}
 		}
 
+		/// <summary>
+		/// Emits an instruction to convert the reference on top of the stack
+		/// (of the given <paramref name="type"/>) to a reference of type
+		/// <see cref="Object"/>.
+		/// </summary>
+		/// <param name='il'>
+		/// The <see cref="ILGenerator"/> with which to emit the instruction.
+		/// </param>
+		/// <param name='type'>
+		/// The type of the topmost reference on the stack.
+		/// </param>
 		private static void Box (ILGenerator il, Type type)
 		{
 			if (type.IsValueType)
@@ -257,6 +347,16 @@ namespace SharpExpect
 			}
 		}
 
+		/// <summary>
+		/// Emits an instruction to push a constant 32-bit integer on to the
+		/// stack, using the most efficient encoding available.
+		/// </summary>
+		/// <param name='il'>
+		/// Il.
+		/// </param>
+		/// <param name='number'>
+		/// Number.
+		/// </param>
 		private static void EmitLoadNumber (ILGenerator il, int number)
 		{
 			switch (number)
@@ -282,8 +382,14 @@ namespace SharpExpect
 			il.Emit (OpCodes.Ldc_I4, number);
 		}
 
-		private static void EmitNullActualCheck (ILGenerator il, FieldInfo actual)
+		private static void EmitNullActualCheck(ILGenerator il, FieldInfo actual)
 		{
+			// Value types can't be null, so bail if actual is one.
+			if (actual.FieldType.IsValueType)
+			{
+				return;
+			}
+
 			var lblOk = il.DefineLabel();
 
 			il.Emit (OpCodes.Ldarg_0);
@@ -299,7 +405,7 @@ namespace SharpExpect
 			il.MarkLabel(lblOk);
 		}
 
-		private static ConstructorBuilder EmitPrivateConstructor<T> (TypeBuilder typeBuilder, FieldInfo actual, FieldInfo inverted)
+		private static ConstructorBuilder EmitPrivateConstructor<T>(TypeBuilder typeBuilder, FieldInfo actual, FieldInfo inverted)
 		{
 			var cb = typeBuilder.DefineConstructor(
 				MethodAttributes.Private | MethodAttributes.SpecialName,
@@ -308,15 +414,19 @@ namespace SharpExpect
 
 			var il = cb.GetILGenerator();
 			var lblReturn = il.DefineLabel();
-			var fiNot = typeBuilder.BaseType.GetField ("Not", BindingFlags.Instance | BindingFlags.Public);
+			var fiNot = typeBuilder.BaseType.GetField("Not", BindingFlags.Instance | BindingFlags.Public);
+			var constructorInfo = typeBuilder.BaseType.GetConstructor(new Type[0]);
 
 			// <invoke default constructor of the base class>
-			il.Emit (OpCodes.Ldarg_0);
-			il.Emit (OpCodes.Call, typeBuilder.BaseType.GetConstructor(new Type[0]));
+			if (constructorInfo != null)
+			{
+				il.Emit(OpCodes.Ldarg_0);
+				il.Emit(OpCodes.Call, constructorInfo);
+			}
 
 			// this.actual = arg1;
-			il.Emit (OpCodes.Ldarg_0);
-			il.Emit (OpCodes.Ldarg_1);
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldarg_1);
 			il.Emit (OpCodes.Stfld, actual);
 
 			// this.inverted = arg2;
