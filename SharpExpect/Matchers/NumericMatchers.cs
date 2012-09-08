@@ -67,6 +67,24 @@ namespace SharpExpect.Matchers
 			return actual >= 0;
 		}
 	}
+	
+	public class UInt16Matcher : BaseMatcher<ushort, UInt16Matcher>
+	{
+		public virtual bool ToBeGreaterThan(ushort expected)
+		{
+			return actual > expected;
+		}
+		
+		public virtual bool ToBeLessThan(ushort expected)
+		{
+			return actual < expected;
+		}
+		
+		public virtual bool ToEqual(ushort expected)
+		{
+			return actual == expected;
+		}
+	}
 
 	public class Int32Matcher : BaseMatcher<int, Int32Matcher>
 	{

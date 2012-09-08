@@ -212,7 +212,7 @@ namespace SharpExpect
 				il.Emit (OpCodes.Call, BadMatchInfo);
 
 				il.MarkLabel(lblOk);
-				il.Emit (OpCodes.Ldloc_0);
+				il.Emit (OpCodes.Ldc_I4_1); // 1 == true in IL
 				il.Emit (OpCodes.Ret);
 			}
 

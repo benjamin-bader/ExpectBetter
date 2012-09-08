@@ -56,14 +56,29 @@ namespace SharpExpect
 			return ClassWrapper.Wrap<short, Int16Matcher>(actual);
 		}
 
+		public static UInt16Matcher The(ushort actual)
+		{
+			return ClassWrapper.Wrap<ushort, UInt16Matcher>(actual);
+		}
+
 		public static Int32Matcher The(int actual)
 		{
 			return ClassWrapper.Wrap<int, Int32Matcher>(actual);
 		}
 
+		public static UInt32Matcher The(uint actual)
+		{
+			return ClassWrapper.Wrap<uint, UInt32Matcher>(actual);
+		}
+
 		public static Int64Matcher The(long actual)
 		{
 			return ClassWrapper.Wrap<long, Int64Matcher>(actual);
+		}
+
+		public static UInt64Matcher The(ulong actual)
+		{
+			return ClassWrapper.Wrap<ulong, UInt64Matcher>(actual);
 		}
 
 		public static SingleMatcher The(float actual)
@@ -89,6 +104,11 @@ namespace SharpExpect
 		public static IntPtrMatcher The(IntPtr actual)
 		{
 			return ClassWrapper.Wrap<IntPtr, IntPtrMatcher>(actual);
+		}
+
+		public static DateTimeMatcher The(DateTime actual)
+		{
+			return ClassWrapper.Wrap<DateTime, DateTimeMatcher>(actual);
 		}
 
 		public static ActionMatcher The(Action actual)

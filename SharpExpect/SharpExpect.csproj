@@ -57,6 +57,7 @@
     <Compile Include="Matchers\FunctionMatcher.cs" />
     <Compile Include="Matchers\BaseEnumerableMatcher.cs" />
     <Compile Include="Matchers\EnumerableMatcher.cs" />
+    <Compile Include="Matchers\DateTimeMatcher.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
