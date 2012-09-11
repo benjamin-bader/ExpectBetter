@@ -21,6 +21,16 @@ namespace SharpExpect.Matchers
 		{
 			return actual.IndexOf(expected, comparison) >= 0;
 		}
+
+		public virtual bool ToBeNullOrEmpty()
+		{
+			return string.IsNullOrEmpty(actual);
+		}
+
+		public virtual bool ToBeNullOrWhitespace()
+		{
+			return string.IsNullOrWhiteSpace(actual);
+		}
 	}
 	
 }
