@@ -9,18 +9,19 @@ namespace SharpExpect.Matchers
 		public virtual bool ToThrow<TException>()
 			where TException : Exception
 		{
+			expectedDescription = "an exception of type " + typeof(TException).FullName;
+
 			try
 			{
 				actual();
 			}
 			catch (TException)
 			{
-				System.Diagnostics.Debug.WriteLine("caught an expected exception!");
 				return true;
 			}
 			catch (Exception ex)
 			{
-				// todo(ben): set a meaningful description once non-default descriptions are in
+				actualDescription = "a function that threw an exception of type " + ex.GetType().FullName;
 			}
 
 			return false;
@@ -32,9 +33,12 @@ namespace SharpExpect.Matchers
 		public virtual bool ToThrow<TException>()
 			where TException : Exception
 		{
+			expectedDescription = "an exception of type " + typeof(TException).FullName;
+
 			try
 			{
 				actual();
+				actualDescription = "an action that completed successfully";
 			}
 			catch (TException)
 			{
@@ -42,7 +46,7 @@ namespace SharpExpect.Matchers
 			}
 			catch (Exception ex)
 			{
-				// todo(ben): set a meaningful description once non-default descriptions are in
+				actualDescription = "an action that threw an exception of type " + ex.GetType().FullName;
 			}
 			
 			return false;

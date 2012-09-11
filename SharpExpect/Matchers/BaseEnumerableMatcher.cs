@@ -15,6 +15,11 @@ namespace SharpExpect.Matchers
 			return actual.Count() == 0;
 		}
 
+		public virtual bool ToContain(TItem expected)
+		{
+			return ToContain(expected, EqualityComparer<TItem>.Default);
+		}
+
 		public virtual bool ToContain(TItem expected, IEqualityComparer<TItem> comparer)
 		{
 			if (comparer == null)

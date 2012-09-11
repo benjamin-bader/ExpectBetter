@@ -5,7 +5,12 @@ namespace SharpExpect
 	public class ExpectationException : ApplicationException
 	{
 		public ExpectationException(string message)
-			: base(message)
+			: this(message, null)
+		{
+		}
+
+		public ExpectationException(string message, Exception innerException)
+			: base(message, innerException)
 		{
 		}
 	}

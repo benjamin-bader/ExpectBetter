@@ -49,7 +49,7 @@ namespace SharpTests
 		[Test]
 		public void FunctionMatcher_ToThrow_CatchesNamedExceptionTypes()
 		{
-			var result = Expect.The(delegate { throw new DivideByZeroException(); return 1; }).ToThrow<DivideByZeroException>();
+			var result = Expect.The<int>(delegate { throw new DivideByZeroException(); }).ToThrow<DivideByZeroException>();
 			Assert.IsTrue(result);
 		}
 		
@@ -62,19 +62,19 @@ namespace SharpTests
 		[Test, ExpectedException(typeof(ExpectationException))]
 		public void FunctionMatcher_ToThrow_WhenOtherExceptionThrown_Throws()
 		{
-			Expect.The(delegate { throw new DivideByZeroException(); return 1; }).ToThrow<NotImplementedException>();
+			Expect.The<int>(delegate { throw new DivideByZeroException(); }).ToThrow<NotImplementedException>();
 		}
 		
 		[Test, ExpectedException(typeof(ExpectationException))]
 		public void FunctionMatcher_Not_ToThrow_WhenNamedExceptionThrown_Throws()
 		{
-			Expect.The(delegate { throw new DivideByZeroException(); return 1; }).Not.ToThrow<DivideByZeroException>();
+			Expect.The<int>(delegate { throw new DivideByZeroException(); }).Not.ToThrow<DivideByZeroException>();
 		}
 		
 		[Test]
 		public void FunctionMatcher_Not_ToThrow_WhenOtherExceptionThrown_ReturnsTrue()
 		{
-			var result = Expect.The(delegate { throw new Exception(); return 1; }).Not.ToThrow<ApplicationException>();
+			var result = Expect.The<int>(delegate { throw new Exception(); }).Not.ToThrow<ApplicationException>();
 			Assert.IsTrue(result);
 		}
 		
@@ -86,4 +86,3 @@ namespace SharpTests
 		}
 	}
 }
-

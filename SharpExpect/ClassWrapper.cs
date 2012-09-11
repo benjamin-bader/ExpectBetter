@@ -7,20 +7,23 @@ using System.Text;
 
 namespace SharpExpect
 {
-	internal static class ClassWrapper
+	public static class ClassWrapper
 	{
-		private const string AssemblyName = "SharpExpectationsWrappers";
+		private const string AssemblyName = "SharpExpectWrappers";
 		private const string AssemblyFileName = AssemblyName + ".dll";
-		private const string WrapperSuffix = "<>Wrapper";
+		private const string WrapperPrefix = "WrapperOf$";
+
+		private const string BugReportMessage = "If you see this message, you have encounted a bug in SharpExpectations.  Please report this error (and stack trace) to the developers at https://github.com/benjamin-bader/SharpExpect.  Thanks, and we're sorry!";
 
 		private static Dictionary<Type, Func<object, object>> WrappedTypes = new Dictionary<Type, Func<object, object>>();
 
 		private static readonly AssemblyName assemblyName;
-		private static readonly AssemblyBuilder assemblyBuilder;
-		private static readonly ModuleBuilder moduleBuilder;
+		internal static readonly AssemblyBuilder assemblyBuilder;
+		internal static readonly ModuleBuilder moduleBuilder;
 
 		private static readonly ConstructorInfo exnCtor = typeof(ExpectationException).GetConstructor(new[] { typeof(string) });
 		private static readonly MethodInfo BadMatchInfo = typeof(ClassWrapper).GetMethod ("BadMatch", BindingFlags.Static | BindingFlags.Public);
+		private static readonly MethodInfo GiveBugReportInfo = typeof(ClassWrapper).GetMethod("GiveBugReport", BindingFlags.Static | BindingFlags.Public);
 
 		static ClassWrapper ()
 		{
@@ -46,20 +49,26 @@ namespace SharpExpect
 		public static M Wrap<T, M> (T actual)
 			where M : BaseMatcher<T, M>
 		{
-			var wrapper = GenerateWrapper<T, M>();
+			var wrapper = RetrieveWrapper<T, M>();
 
 			return (M) wrapper((object)actual);
 		}
 
-		public static void BadMatch (bool inverted, object actual, string methodName, object[] expectedArgs)
+		public static void GiveBugReport(Exception ex)
 		{
-			var actualDesc =  "[" + ToStringRespectingNulls(actual) + "]";
-			var expectedDesc = DescriptionOfExpected(expectedArgs);
+			throw new ExpectationException(BugReportMessage, ex);
+		}
+
+		public static void BadMatch (string actualDesc, string expectedDesc, bool inverted, object actual, string methodName, object[] expectedArgs)
+		{
+			actualDesc = "[" + (actualDesc ?? ToStringRespectingNulls(actual)) + "]";
+			expectedDesc = expectedDesc ?? DescriptionOfExpected(expectedArgs);
 			var message = new StringBuilder("Failure: ")
 				.Append ("Expected ")
 				.Append (actualDesc)
 				.Append (inverted ? " not " : " ")
 				.Append (System.Text.RegularExpressions.Regex.Replace(methodName, "([A-Z])", " $1").ToLowerInvariant())
+				.Append (" ")
 				.Append (expectedDesc)
 				.ToString();
 
@@ -85,149 +94,42 @@ namespace SharpExpect
 				: obj.ToString ();
 		}
 
-		private static Func<object, object> GenerateWrapper<T, M> ()
+		/// <summary>
+		/// Returns a wrapper factory function for a given matcher type
+		/// <typeparamref name="M"/>.
+		/// </summary>
+		/// <description>
+		/// Wrappers are cached; if no cached wrapper exists, one is generated.
+		/// </description>
+		/// <returns>
+		/// A <see cref="Func&lt;Object, Object&gt;"/> which, when invoked,
+		/// creates an instance of the wrapped matcher with the given actual
+		/// value.
+		/// </returns>
+		/// <typeparam name='T'>
+		/// The type of the 'actual' value tested by matcher <typeparamref name="M"/>.
+		/// </typeparam>
+		/// <typeparam name='M'>
+		/// The type of the matcher to be wrapped.  Must derive from
+		/// <see cref="BaseMatcher"/>.
+		/// </typeparam>
+		private static Func<object, object> RetrieveWrapper<T, M>()
+			where M : BaseMatcher<T, M>
 		{
-			Type @base = typeof(M);
+			var @base = typeof(M);
 			Func<object, object> result = null;
 
-			lock (WrappedTypes) {
-				if (WrappedTypes.TryGetValue (@base, out result)) {
+			lock (WrappedTypes)
+			{
+				if (WrappedTypes.TryGetValue (@base, out result))
+				{
 					return result;
 				}
 			}
 
-			var builder = moduleBuilder.DefineType(
-				@base.Name + WrapperSuffix,
-				TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public,
-				@base);
+			var completedNewType = GenerateWrapper<T, M>();
+			result = GenerateFactoryFunction<T>(completedNewType);
 			
-			var actual = builder.BaseType.GetField ("actual", BindingFlags.Instance | BindingFlags.NonPublic);
-			var inverted = builder.BaseType.GetField ("inverted", BindingFlags.Instance | BindingFlags.NonPublic);
-			var privateCtor = EmitPrivateConstructor<T>(builder, actual, inverted);
-
-			EmitPublicConstructor<T>(builder, privateCtor);
-
-			foreach (var mi in @base.GetMethods (BindingFlags.Instance | BindingFlags.Public))
-			{
-				// The strategy here is to override each test method such that it
-				// handles nullness properly and blows up when the test method fails.
-				//
-				// for each public method not declared in System.Object
-				//   ensure it is virtual
-				//   ensure it returns a bool
-				//   match generic parameters & constraints, if present in base
-				//   if base is annotated with [AllowNullActual] and actual is not a value type, emit a null check.
-				//   call the base with the given arguments
-				//   if (retVal ^ inverted) call ClassWrapper.BadMatch
-				//   return retVal
-
-				if (mi.IsSpecialName || typeof(object) == mi.DeclaringType)
-				{
-					continue;
-				}
-
-				if (typeof(bool) != mi.ReturnType)
-				{
-					var message = string.Format("Invalid return type '{0}' in method '{1}'", mi.ReturnType, mi.Name);
-					throw new NotSupportedException(message);
-				}
-
-				if (!mi.IsVirtual)
-				{
-					throw new NotSupportedException("Non-virtual public test method: " + mi.Name);
-				}
-
-				var parameters = mi.GetParameters();
-				var wrapper = builder.DefineMethod(
-					mi.Name,
-					MethodAttributes.Public | MethodAttributes.Virtual,
-					typeof(bool),
-					Array.ConvertAll (parameters, p => p.ParameterType));
-				
-				if (mi.IsGenericMethod)
-				{
-					DefineGenericParameters(wrapper, mi);
-				}
-
-				var actualCanBeNull = mi.GetCustomAttributes(typeof(AllowNullActualAttribute), true).Length > 0;
-				var il = wrapper.GetILGenerator();
-				var lblOk = il.DefineLabel();
-				var locAssert = il.DeclareLocal(typeof(bool));
-				var locArgs = il.DeclareLocal(typeof(object[]));
-
-				if (!actualCanBeNull)
-				{
-					EmitNullActualCheck(il, actual);
-				}
-
-				il.Emit (OpCodes.Ldarg_0);
-
-				for (var i = 0; i < parameters.Length; ++i)
-				{
-					Console.WriteLine("Method {0}: loading arg {1}", mi.Name, i + 1);
-					EmitLdArg(il, i + 1);
-				}
-
-				il.Emit (OpCodes.Call, mi);
-				il.Emit (OpCodes.Stloc_0);
-				il.Emit (OpCodes.Ldloc_0);
-				il.Emit (OpCodes.Ldarg_0);
-				il.Emit (OpCodes.Ldfld, inverted);
-				il.Emit (OpCodes.Xor);
-				il.Emit (OpCodes.Brtrue, lblOk);
-
-				// Assert failed - now we throw ALL THE THINGS
-
-				// First, marshal the params into an object array
-				EmitLoadNumber (il, parameters.Length);
-				il.Emit (OpCodes.Newarr, typeof(object));
-				il.Emit (OpCodes.Stloc_1);
-
-				for (var i = 0; i < parameters.Length; ++i)
-				{
-					il.Emit (OpCodes.Ldloc_1);
-					EmitLoadNumber(il, i);
-					EmitLdArg (il, i + 1);
-					Box(il, parameters[i].ParameterType);
-					il.Emit (OpCodes.Stelem_I4);
-				}
-
-				// Next, push relevant args for BadMatch
-
-				// Inverted
-				il.Emit (OpCodes.Ldarg_0);
-				il.Emit (OpCodes.Ldfld, inverted);
-
-				// Actual
-				il.Emit (OpCodes.Ldarg_0);
-				il.Emit (OpCodes.Ldfld, actual);
-
-				// Method name
-				il.Emit (OpCodes.Ldstr, mi.Name);
-
-				// Expected arg array
-				il.Emit (OpCodes.Ldloc_1);
-
-				// Call BadMatch (which throws)
-				il.Emit (OpCodes.Call, BadMatchInfo);
-
-				il.MarkLabel(lblOk);
-				il.Emit (OpCodes.Ldc_I4_1); // 1 == true in IL
-				il.Emit (OpCodes.Ret);
-			}
-
-			var createdType = builder.CreateType();
-			var method = new DynamicMethod("construct", typeof(object), new[] { typeof(object) }, moduleBuilder);
-			var mil = method.GetILGenerator();
-
-			mil.Emit (OpCodes.Ldarg_0);
-			mil.Emit (OpCodes.Unbox_Any, typeof(T));
-			mil.Emit (OpCodes.Newobj, createdType.GetConstructor(new[] { typeof(T) }));
-			Box (mil, createdType);
-			mil.Emit (OpCodes.Ret);
-
-			result = (Func<object, object>) method.CreateDelegate(typeof(Func<object, object>));
-
 			lock (WrappedTypes)
 			{
 				Func<object, object> fn;
@@ -240,8 +142,203 @@ namespace SharpExpect
 					WrappedTypes[@base] = result;
 				}
 			}
-
+			
 			return result;
+		}
+
+		private static Type GenerateWrapper<T, M> ()
+			where M : BaseMatcher<T, M>
+		{
+			var @base = typeof(M);
+			var builder = moduleBuilder.DefineType(
+				WrapperPrefix + @base.Name,
+				TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public,
+				@base);
+			
+			var actual = builder.BaseType.GetField ("actual", BindingFlags.Instance | BindingFlags.NonPublic);
+			var inverted = builder.BaseType.GetField ("inverted", BindingFlags.Instance | BindingFlags.NonPublic);
+			var privateCtor = EmitPrivateConstructor<T>(builder, actual, inverted);
+
+			EmitPublicConstructor<T>(builder, privateCtor);
+
+			foreach (var mi in @base.GetMethods (BindingFlags.Instance | BindingFlags.Public))
+			{
+				if (mi.IsSpecialName || typeof(object) == mi.DeclaringType)
+				{
+					continue;
+				}
+				
+				if (typeof(bool) != mi.ReturnType)
+				{
+					var message = string.Format("Invalid return type '{0}' in method '{1}'", mi.ReturnType, mi.Name);
+					throw new NotSupportedException(message);
+				}
+				
+				if (!mi.IsVirtual)
+				{
+					throw new NotSupportedException("Non-virtual public test method: " + mi.Name);
+				}
+
+				WrapTestMethod<T, M>(mi, builder, actual, inverted);
+			}
+
+			return builder.CreateType();
+
+		}
+
+		private static void WrapTestMethod<T, M>(MethodInfo mi, TypeBuilder builder, FieldInfo actual, FieldInfo inverted)
+			where M : BaseMatcher<T, M>
+		{
+			// The strategy here is to override each test method such that it
+			// handles nullness properly and blows up when the test method fails.
+			//
+			// for each public method not declared in System.Object
+			//   ensure it is virtual
+			//   ensure it returns a bool
+			//   match generic parameters & constraints, if present in base
+			//   if base is annotated with [AllowNullActual] and actual is not a value type, emit a null check.
+			//   call the base with the given arguments
+			//   if (retVal ^ inverted) call ClassWrapper.BadMatch
+			//   return retVal
+			
+			var parameters = mi.GetParameters();
+			var wrapper = builder.DefineMethod(
+				mi.Name,
+				MethodAttributes.Public | MethodAttributes.Virtual,
+				typeof(bool),
+				Array.ConvertAll (parameters, p => p.ParameterType));
+			
+			if (mi.IsGenericMethod)
+			{
+				DefineGenericParameters(wrapper, mi);
+			}
+			
+			var actualCanBeNull = mi.GetCustomAttributes(typeof(AllowNullActualAttribute), true).Length > 0;
+			var il = wrapper.GetILGenerator();
+			var lblOk = il.DefineLabel();
+			var lblErr = il.DefineLabel();
+
+			il.DeclareLocal(typeof(bool));      // loc.0
+			il.DeclareLocal(typeof(object[]));  // loc.1
+			
+			if (!actualCanBeNull)
+			{
+				EmitNullActualCheck(il, actual);
+			}
+			
+			il.BeginExceptionBlock();
+			
+			il.Emit (OpCodes.Ldarg_0);
+			
+			for (var i = 0; i < parameters.Length; ++i)
+			{
+				Console.WriteLine("Method {0}: loading arg {1}", mi.Name, i + 1);
+				EmitLdArg(il, i + 1);
+			}
+			
+			il.Emit (OpCodes.Call, mi);
+			il.Emit (OpCodes.Stloc_0);
+			il.Emit (OpCodes.Ldloc_0);
+			il.Emit (OpCodes.Ldarg_0);
+			il.Emit (OpCodes.Ldfld, inverted);
+			il.Emit (OpCodes.Xor);
+			il.Emit (OpCodes.Brfalse_S, lblErr);
+			
+			il.Emit (OpCodes.Leave_S, lblOk);
+			
+			// Assert failed - now we throw ALL THE THINGS
+			il.MarkLabel(lblErr);
+			
+			// First, marshal the params into an object array
+			EmitLoadNumber (il, parameters.Length);
+			il.Emit (OpCodes.Newarr, typeof(object));
+			il.Emit (OpCodes.Stloc_1);
+			
+			for (var i = 0; i < parameters.Length; ++i)
+			{
+				il.Emit (OpCodes.Ldloc_1);
+				EmitLoadNumber(il, i);
+				il.Emit(OpCodes.Conv_I); // 'stelem' requires a nativeint index 
+				EmitLdArg (il, i + 1);
+				Box(il, parameters[i].ParameterType);
+				il.Emit (OpCodes.Stelem_I4);
+			}
+			
+			// Next, push relevant args for BadMatch
+
+			// Description of actual
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldfld, typeof(M).GetField("actualDescription", BindingFlags.Instance | BindingFlags.NonPublic));
+
+			// Description of expected
+			il.Emit(OpCodes.Ldarg_0);
+			il.Emit(OpCodes.Ldfld, typeof(M).GetField("expectedDescription", BindingFlags.Instance | BindingFlags.NonPublic));
+
+			// Inverted
+			il.Emit (OpCodes.Ldarg_0);
+			il.Emit (OpCodes.Ldfld, inverted);
+			
+			// Actual
+			il.Emit (OpCodes.Ldarg_0);
+			il.Emit (OpCodes.Ldfld, actual);
+			
+			// Method name
+			il.Emit (OpCodes.Ldstr, mi.Name);
+			
+			// Expected arg array
+			il.Emit (OpCodes.Ldloc_1);
+			
+			// Call BadMatch (which throws)
+			il.Emit (OpCodes.Call, BadMatchInfo);
+			
+			// catch InvalidProgramExceptions - these are bugs generated somewhere in this file.
+			il.BeginCatchBlock(typeof(InvalidProgramException));
+			il.Emit(OpCodes.Call, GiveBugReportInfo);
+			
+			// ditto for BadImageFormatExceptions
+			il.BeginCatchBlock(typeof(BadImageFormatException));
+			il.Emit(OpCodes.Call, GiveBugReportInfo);
+			
+			il.EndExceptionBlock();
+			
+			il.MarkLabel(lblOk);
+			il.Emit (OpCodes.Ldc_I4_1); // 1 == true in IL
+			il.Emit (OpCodes.Ret);
+		}
+
+		/// <summary>
+		/// For a given type that has a constructor taking one argument of type
+		/// <typeparamref name="T"/>, creates a <see cref="Func&lt;Object, Object&gt;"/>
+		/// invoking said constructor and returns it.  
+		/// </summary>
+		/// <returns>
+		/// The factory function.
+		/// </returns>
+		/// <param name='createdType'>
+		/// The type for which to create a factory function.
+		/// </param>
+		/// <typeparam name='T'>
+		/// The type of parameter consumed by the wrapped type's constructor.
+		/// </typeparam>
+		private static Func<object, object> GenerateFactoryFunction<T>(Type createdType)
+		{
+			var constructorInfo = createdType.GetConstructor(new[] { typeof(T) });
+
+			if (constructorInfo == null)
+			{
+				throw new ArgumentException("The created type must have a public constructor taking one argument of type T.");
+			}
+
+			var method = new DynamicMethod("construct", typeof(object), new[] { typeof(object) }, moduleBuilder);
+			var mil = method.GetILGenerator();
+			
+			mil.Emit (OpCodes.Ldarg_0);
+			mil.Emit (OpCodes.Unbox_Any, typeof(T));
+			mil.Emit (OpCodes.Newobj, constructorInfo);
+			Box (mil, createdType);
+			mil.Emit (OpCodes.Ret);
+			
+			return (Func<object, object>) method.CreateDelegate(typeof(Func<object, object>));
 		}
 
 		/// <summary>
@@ -271,7 +368,7 @@ namespace SharpExpect
 				var interfaces = constraintsAndBaseType.Item1.ToArray();
 				var baseTypeArray = constraintsAndBaseType.Item2.ToArray();
 
-				if ((arg.GenericParameterAttributes & GenericParameterAttributes.None) != GenericParameterAttributes.None)
+				if (arg.GenericParameterAttributes != GenericParameterAttributes.None)
 				{
 					p.SetGenericParameterAttributes(arg.GenericParameterAttributes);
 				}
@@ -352,10 +449,10 @@ namespace SharpExpect
 		/// stack, using the most efficient encoding available.
 		/// </summary>
 		/// <param name='il'>
-		/// Il.
+		/// The <see cref="ILGenerator"/> to emit the load instruction.
 		/// </param>
 		/// <param name='number'>
-		/// Number.
+		/// The constant to be loaded.
 		/// </param>
 		private static void EmitLoadNumber (ILGenerator il, int number)
 		{
@@ -382,6 +479,17 @@ namespace SharpExpect
 			il.Emit (OpCodes.Ldc_I4, number);
 		}
 
+		/// <summary>
+		/// Emits instructions verifying that the value stored in the given
+		/// field <paramref name="actual"/> is not <see langword="null"/>.
+		/// Emits nothing if the type of the given field is a value type.
+		/// </summary>
+		/// <param name='il'>
+		/// The <see cref="ILGenerator"/> to emit the null check.
+		/// </param>
+		/// <param name='actual'>
+		/// The <see cref="FieldInfo"/> whose value is to be verified.
+		/// </param>
 		private static void EmitNullActualCheck(ILGenerator il, FieldInfo actual)
 		{
 			// Value types can't be null, so bail if actual is one.
@@ -405,6 +513,41 @@ namespace SharpExpect
 			il.MarkLabel(lblOk);
 		}
 
+		/// <summary>
+		/// Emits the private constructor, which does the work of setting up
+		/// the actual, inverted, and Not fields of BaseMatcher.
+		/// </summary>
+		/// <description>
+		/// In C#, the constructor would look like this:
+		/// <code>
+		/// private TypeName(T actual, bool inverted)
+		///     : base()
+		/// {
+		///     this.actual = actual;
+		///     this.inverted = inverted;
+		/// 
+		///     if (!inverted)
+		///     {
+		///         this.Not = new TypeName(actual, true);
+		///     }
+		/// }
+		/// </code>
+		/// </description>
+		/// <returns>
+		/// The private constructor.
+		/// </returns>
+		/// <param name='typeBuilder'>
+		/// Type builder.
+		/// </param>
+		/// <param name='actual'>
+		/// Actual.
+		/// </param>
+		/// <param name='inverted'>
+		/// Inverted.
+		/// </param>
+		/// <typeparam name='T'>
+		/// The 1st type parameter.
+		/// </typeparam>
 		private static ConstructorBuilder EmitPrivateConstructor<T>(TypeBuilder typeBuilder, FieldInfo actual, FieldInfo inverted)
 		{
 			var cb = typeBuilder.DefineConstructor(
@@ -434,7 +577,7 @@ namespace SharpExpect
 			il.Emit (OpCodes.Ldarg_2);
 			il.Emit (OpCodes.Stfld, inverted);
 
-			// if (!inverted) {
+			// if (!inverted)
 			il.Emit (OpCodes.Ldarg_2);
 			il.Emit (OpCodes.Brtrue_S, lblReturn);
 
@@ -445,10 +588,7 @@ namespace SharpExpect
 			il.Emit (OpCodes.Newobj, cb);
 			il.Emit (OpCodes.Stfld, fiNot);
 
-			// }
 			il.MarkLabel(lblReturn);
-
-			// return;
 			il.Emit (OpCodes.Ret);
 
 			return cb;

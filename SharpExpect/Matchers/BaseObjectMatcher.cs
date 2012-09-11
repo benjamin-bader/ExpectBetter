@@ -23,9 +23,10 @@ namespace SharpExpect.Matchers
 			return actual.Equals(expected);
 		}
 
-		public virtual bool ToBeAnInstanceOf(Type type)
+		public virtual bool ToBeAnInstanceOf<TExpected>()
 		{
-			return type.IsAssignableFrom(actual.GetType());
+			expectedDescription = typeof(TExpected).FullName;
+			return typeof(TExpected).IsAssignableFrom(actual.GetType());
 		}
 	}
 	

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 
 using SharpExpect;
@@ -49,6 +50,15 @@ namespace SharpTests
 		public void ToBeTheSameAs_WhenActualDiffersFromExpected_Throws()
 		{
 			Expect.The(new object()).ToBeTheSameAs(new TypeLoadException());
+		}
+
+		[Test]
+		public void ToBeAnInstanceOf_WhenActualHasExpectedType_ReturnsTrue()
+		{
+			var actual = new Dictionary<string, string>();
+			var result = Expect.The((object)actual).ToBeAnInstanceOf<IDictionary<string, string>>();
+
+			Assert.IsTrue(result);
 		}
 	}
 }

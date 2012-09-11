@@ -18,9 +18,14 @@ namespace SharpExpect
 			return actual.Count >= expected;
 		}
 
-		public virtual bool ToBeEmpty()
+		public override bool ToBeEmpty()
 		{
 			return actual.Count == 0;
+		}
+
+		public override bool ToContain(TItem item)
+		{
+			return actual.Contains(item);
 		}
 	}
 }

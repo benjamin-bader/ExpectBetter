@@ -8,7 +8,7 @@ namespace SharpExpect
 	{
 		public void Do()
 		{
-			var o = new object();
+//			var o = new object();
 
 //			Expect.The (o).Not.ToBeNull ();
 //			Expect.The ("foo").Not.ToBeNull ();
@@ -37,6 +37,11 @@ namespace SharpExpect
 	public class Base
 	{
 		protected int actual;
+
+		public void TestMe()
+		{
+			Console.WriteLine("Base");
+		}
 	}
 
 	public class Derived : Base
@@ -44,6 +49,12 @@ namespace SharpExpect
 		public Derived (int a)
 		{
 			actual = a; 
+		}
+
+		new public void TestMe()
+		{
+			Console.WriteLine("Derived");
+			base.TestMe();
 		}
 	}
 
@@ -68,15 +79,18 @@ namespace SharpExpect
 
 			try
 			{
-				Expect.The(0).ToBeGreaterThan(-1);
+				Expect.The(() => { throw new InvalidOperationException(); }).ToThrow<InvalidCastException>();
 			}
-			catch (InvalidProgramException ex)
+			catch (Exception ex)
 			{
 				Console.WriteLine("BOOM!  {0}", ex);
 #if DEBUG
 				ClassWrapper.SaveAssembly();
 #endif
 			}
+
+			Base derived = new Derived(0);
+			derived.TestMe();
 
 			Console.WriteLine ("hello");
 			Console.ReadKey();
