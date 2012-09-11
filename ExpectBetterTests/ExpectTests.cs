@@ -1,8 +1,8 @@
 using System;
 using NUnit.Framework;
 
-using SharpExpect;
-using SharpExpect.Matchers;
+using ExpectBetter;
+using ExpectBetter.Matchers;
 
 namespace SharpTests
 {

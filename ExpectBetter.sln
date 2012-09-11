@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpExpect", "SharpExpect\SharpExpect.csproj", "{9049A517-2256-4CC6-9598-7B61B6B811D8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExpectBetter", "ExpectBetter\ExpectBetter.csproj", "{9049A517-2256-4CC6-9598-7B61B6B811D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpTests", "SharpTests\SharpTests.csproj", "{C78D6BA5-8456-48B6-8E79-FEDB5EA78A0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpTests", "ExpectBetterTests\ExpectBetterTests.csproj", "{C78D6BA5-8456-48B6-8E79-FEDB5EA78A0A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +21,6 @@ Global
 		{C78D6BA5-8456-48B6-8E79-FEDB5EA78A0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = SharpExpect\SharpExpect.csproj
+		StartupItem = ExpectBetter\ExpectBetter.csproj
 	EndGlobalSection
 EndGlobal

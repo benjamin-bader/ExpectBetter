@@ -1,6 +1,6 @@
 using System;
 
-namespace SharpExpect
+namespace ExpectBetter
 {
 	public class ExpectationException : ApplicationException
 	{

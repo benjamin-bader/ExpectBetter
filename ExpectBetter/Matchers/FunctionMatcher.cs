@@ -1,8 +1,8 @@
 using System;
 
-using SharpExpect;
+using ExpectBetter;
 
-namespace SharpExpect.Matchers
+namespace ExpectBetter.Matchers
 {
 	public class FunctionMatcher<T> : BaseMatcher<Func<T>, FunctionMatcher<T>>
 	{

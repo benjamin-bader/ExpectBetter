@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using SharpExpect.Matchers;
+using ExpectBetter.Matchers;
 
-namespace SharpExpect
+namespace ExpectBetter
 {
 	public class BaseCollectionMatcher<TCollection, TItem, M> : BaseEnumerableMatcher<TCollection, TItem, M>
 		where TCollection : ICollection<TItem>

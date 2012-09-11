@@ -1,6 +1,6 @@
 using System;
 using NUnit.Framework;
-using SharpExpect;
+using ExpectBetter;
 
 namespace SharpTests
 {

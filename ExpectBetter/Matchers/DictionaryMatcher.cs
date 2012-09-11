@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace SharpExpect.Matchers
+namespace ExpectBetter.Matchers
 {
 	public class DictionaryMatcher<K, V> : BaseCollectionMatcher<IDictionary<K, V>, KeyValuePair<K, V>, DictionaryMatcher<K, V>>
 	{

@@ -1,6 +1,6 @@
 using System;
 
-namespace SharpExpect
+namespace ExpectBetter
 {
 	[AttributeUsage(AttributeTargets.Method, Inherited = true)]
 	public class AllowNullActualAttribute : Attribute

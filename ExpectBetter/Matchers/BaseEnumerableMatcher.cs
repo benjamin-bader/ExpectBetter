@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using SharpExpect.Matchers;
+using ExpectBetter.Matchers;
 
-namespace SharpExpect.Matchers
+namespace ExpectBetter.Matchers
 {
 	public class BaseEnumerableMatcher<TEnumerable, TItem, M> : BaseObjectMatcher<TEnumerable, M>
 		where TEnumerable : IEnumerable<TItem>

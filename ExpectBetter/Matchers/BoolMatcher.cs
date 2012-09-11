@@ -1,8 +1,8 @@
 using System;
 
-using SharpExpect.Matchers;
+using ExpectBetter.Matchers;
 
-namespace SharpExpect.Matchers
+namespace ExpectBetter.Matchers
 {
 
 	public class BoolMatcher : BaseMatcher<bool, BoolMatcher>

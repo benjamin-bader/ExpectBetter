@@ -1,6 +1,6 @@
 using System;
 
-namespace SharpExpect.Matchers
+namespace ExpectBetter.Matchers
 {
 
 	public class BaseObjectMatcher<T, M> : BaseMatcher<T, M>

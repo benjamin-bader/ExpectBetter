@@ -5,15 +5,15 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 
-namespace SharpExpect
+namespace ExpectBetter
 {
 	public static class ClassWrapper
 	{
-		private const string AssemblyName = "SharpExpectWrappers";
+		private const string AssemblyName = "ExpectBetterWrappers";
 		private const string AssemblyFileName = AssemblyName + ".dll";
 		private const string WrapperPrefix = "WrapperOf$";
 
-		private const string BugReportMessage = "If you see this message, you have encounted a bug in SharpExpectations.  Please report this error (and stack trace) to the developers at https://github.com/benjamin-bader/SharpExpect.  Thanks, and we're sorry!";
+		private const string BugReportMessage = "If you see this message, you have encounted a bug in ExpectBetterations.  Please report this error (and stack trace) to the developers at https://github.com/benjamin-bader/ExpectBetter.  Thanks, and we're sorry!";
 
 		private static Dictionary<Type, Func<object, object>> WrappedTypes = new Dictionary<Type, Func<object, object>>();
 

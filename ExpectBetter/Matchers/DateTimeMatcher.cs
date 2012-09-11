@@ -1,6 +1,6 @@
 using System;
 
-namespace SharpExpect
+namespace ExpectBetter
 {
 	public class DateTimeMatcher : BaseMatcher<DateTime, DateTimeMatcher>
 	{

@@ -7,8 +7,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{C78D6BA5-8456-48B6-8E79-FEDB5EA78A0A}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>SharpTests</RootNamespace>
-    <AssemblyName>SharpTests</AssemblyName>
+    <RootNamespace>ExpectBetterTests</RootNamespace>
+    <AssemblyName>ExpectBetterTests</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -43,9 +43,9 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\SharpExpect\SharpExpect.csproj">
+    <ProjectReference Include="..\ExpectBetter\ExpectBetter.csproj">
       <Project>{9049A517-2256-4CC6-9598-7B61B6B811D8}</Project>
-      <Name>SharpExpect</Name>
+      <Name>ExpectBetter</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>
