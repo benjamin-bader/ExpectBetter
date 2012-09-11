@@ -6,10 +6,9 @@
     <ProductVersion>10.0.0</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{9049A517-2256-4CC6-9598-7B61B6B811D8}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <RootNamespace>ExpectBetter</RootNamespace>
     <AssemblyName>ExpectBetter</AssemblyName>
-    <StartupObject>ExpectBetter.Driver</StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
@@ -34,7 +33,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MyClass.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ClassWrapper.cs" />
     <Compile Include="AllowNullActualAttribute.cs" />
