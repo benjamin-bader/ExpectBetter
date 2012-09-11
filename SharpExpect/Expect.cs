@@ -4,8 +4,13 @@ using SharpExpect.Matchers;
 
 namespace SharpExpect
 {
-	public static class Expect
+	public class Expect
 	{
+		protected Expect()
+		{
+
+		}
+
 		public static ObjectMatcher The(object actual)
 		{
 			return ClassWrapper.Wrap<object, ObjectMatcher>(actual);
