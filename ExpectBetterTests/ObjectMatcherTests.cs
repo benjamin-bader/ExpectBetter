@@ -5,7 +5,7 @@ using NUnit.Framework;
 using ExpectBetter;
 using ExpectBetter.Matchers;
 
-namespace SharpTests
+namespace ExpectBetterTests
 {
 	[TestFixture]
 	public class ObjectMatcherTests
@@ -13,8 +13,7 @@ namespace SharpTests
 		[Test]
 		public void ToBeNull_WhenActualIsNull_ReturnsTrue()
 		{
-			var result = Expect.The(null as object).ToBeNull();
-			Assert.IsTrue(result);
+			Expect.The(null as object).ToBeNull();
 		}
 
 		[Test, ExpectedException(typeof(ExpectationException))]
@@ -32,8 +31,7 @@ namespace SharpTests
 		[Test]
 		public void Not_ToBeNull_WhenActualIsNotNull_ReturnsTrue()
 		{
-			var result = Expect.The(new object()).Not.ToBeNull();
-			Assert.IsTrue(result);
+			Expect.The(new object()).Not.ToBeNull();
 		}
 
 		[Test]
@@ -41,9 +39,8 @@ namespace SharpTests
 		{
 			var actual = new object();
 			var expected = actual;
-			var result = Expect.The(actual).ToBeTheSameAs(expected);
-
-			Assert.IsTrue(result);
+			
+            Expect.The(actual).ToBeTheSameAs(expected);
 		}
 
 		[Test, ExpectedException(typeof(ExpectationException))]
@@ -56,9 +53,8 @@ namespace SharpTests
 		public void ToBeAnInstanceOf_WhenActualHasExpectedType_ReturnsTrue()
 		{
 			var actual = new Dictionary<string, string>();
-			var result = Expect.The((object)actual).ToBeAnInstanceOf<IDictionary<string, string>>();
-
-			Assert.IsTrue(result);
+			
+            Expect.The(actual).ToBeAnInstanceOf<IDictionary<string, string>>();
 		}
 	}
 }

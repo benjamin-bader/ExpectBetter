@@ -15,7 +15,9 @@ namespace ExpectBetter
 
 		private const string BugReportMessage = "If you see this message, you have encounted a bug in ExpectBetterations.  Please report this error (and stack trace) to the developers at https://github.com/benjamin-bader/ExpectBetter.  Thanks, and we're sorry!";
 
-		private static Dictionary<Type, Func<object, object>> WrappedTypes = new Dictionary<Type, Func<object, object>>();
+        //private static Dictionary<Type, Func<object, object>> WrappedTypes = new Dictionary<Type, Func<object, object>>();
+        private static Dictionary<Type, Type> WrappedTypes = new Dictionary<Type, Type>();
+        private static Dictionary<Type, Func<object, object>> Constructors = new Dictionary<Type, Func<object, object>>();
 
 		private static readonly AssemblyName assemblyName;
 		internal static readonly AssemblyBuilder assemblyBuilder;
@@ -51,7 +53,15 @@ namespace ExpectBetter
 		{
 			var wrapper = RetrieveWrapper<T, M>();
 
-			return (M) wrapper((object)actual);
+            if (wrapper.ContainsGenericParameters)
+            {
+                // HACK wtf
+                var parameters = typeof(T).GetGenericArguments();
+                wrapper = wrapper.MakeGenericType(parameters);
+            }
+
+            return (M)Activator.CreateInstance(wrapper, new object[] { actual });
+			//return (M) wrapper((object)actual);
 		}
 
 		public static void GiveBugReport(Exception ex)
@@ -67,7 +77,7 @@ namespace ExpectBetter
 				.Append ("Expected ")
 				.Append (actualDesc)
 				.Append (inverted ? " not " : " ")
-				.Append (System.Text.RegularExpressions.Regex.Replace(methodName, "([A-Z])", " $1").ToLowerInvariant())
+				.Append (System.Text.RegularExpressions.Regex.Replace(methodName, "([A-Z])", "$1").ToLowerInvariant())
 				.Append (" ")
 				.Append (expectedDesc)
 				.ToString();
@@ -113,13 +123,19 @@ namespace ExpectBetter
 		/// The type of the matcher to be wrapped.  Must derive from
 		/// <see cref="BaseMatcher"/>.
 		/// </typeparam>
-		private static Func<object, object> RetrieveWrapper<T, M>()
+		private static Type RetrieveWrapper<T, M>()
 			where M : BaseMatcher<T, M>
 		{
 			var @base = typeof(M);
-			Func<object, object> result = null;
+            Type result = null;
+            //Func<object, object> result = null;
 
-			lock (WrappedTypes)
+            if (@base.IsGenericType && !@base.IsGenericTypeDefinition)
+            {
+                @base = @base.GetGenericTypeDefinition();
+            }
+
+            lock (WrappedTypes)
 			{
 				if (WrappedTypes.TryGetValue (@base, out result))
 				{
@@ -127,12 +143,12 @@ namespace ExpectBetter
 				}
 			}
 
-			var completedNewType = GenerateWrapper<T, M>();
-			result = GenerateFactoryFunction<T>(completedNewType);
+			var completedNewType = GenerateWrapper<T>(@base);
+            result = completedNewType; //GenerateFactoryFunction<T>(completedNewType);
 			
 			lock (WrappedTypes)
 			{
-				Func<object, object> fn;
+				Type fn;
 				if (WrappedTypes.TryGetValue(@base, out fn))
 				{
 					result = fn;
@@ -142,18 +158,46 @@ namespace ExpectBetter
 					WrappedTypes[@base] = result;
 				}
 			}
+
+            //assemblyBuilder.Save(AssemblyFileName);
 			
 			return result;
 		}
 
-		private static Type GenerateWrapper<T, M> ()
-			where M : BaseMatcher<T, M>
+		private static Type GenerateWrapper<T> (Type @base)
 		{
-			var @base = typeof(M);
 			var builder = moduleBuilder.DefineType(
 				WrapperPrefix + @base.Name,
 				TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public,
 				@base);
+
+            if (@base.IsGenericTypeDefinition)
+            {
+                var genericArgs = @base.GetGenericArguments();
+                var typeNames = Array.ConvertAll(genericArgs, arg => arg.Name);
+                var parameterBuilders = builder.DefineGenericParameters(typeNames);
+
+                for (var i = 0; i < parameterBuilders.Length; ++i)
+                {
+                    var baseArg = genericArgs[i];
+                    var argBuilder = parameterBuilders[i];
+                    var interfacesAndBaseType = baseArg.GetGenericParameterConstraints().Partition(t => t.IsInterface);
+                    var interfaces = interfacesAndBaseType.Item1.ToArray();
+                    var baseType = interfacesAndBaseType.Item2.SingleOrDefault();
+
+                    argBuilder.SetGenericParameterAttributes(baseArg.GenericParameterAttributes);
+
+                    if (baseType != null)
+                    {
+                        argBuilder.SetBaseTypeConstraint(baseType);
+                    }
+
+                    if (interfaces.Length > 0)
+                    {
+                        argBuilder.SetInterfaceConstraints(interfaces);
+                    }
+                }
+            }
 			
 			var actual = builder.BaseType.GetField ("actual", BindingFlags.Instance | BindingFlags.NonPublic);
 			var inverted = builder.BaseType.GetField ("inverted", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -179,15 +223,14 @@ namespace ExpectBetter
 					throw new NotSupportedException("Non-virtual public test method: " + mi.Name);
 				}
 
-				WrapTestMethod<T, M>(mi, builder, actual, inverted);
+				WrapTestMethod<T>(mi, builder, actual, inverted, @base);
 			}
 
 			return builder.CreateType();
 
 		}
 
-		private static void WrapTestMethod<T, M>(MethodInfo mi, TypeBuilder builder, FieldInfo actual, FieldInfo inverted)
-			where M : BaseMatcher<T, M>
+		private static void WrapTestMethod<T>(MethodInfo mi, TypeBuilder builder, FieldInfo actual, FieldInfo inverted, Type @base)
 		{
 			// The strategy here is to override each test method such that it
 			// handles nullness properly and blows up when the test method fails.
@@ -220,8 +263,8 @@ namespace ExpectBetter
 
 			il.DeclareLocal(typeof(bool));      // loc.0
 			il.DeclareLocal(typeof(object[]));  // loc.1
-			
-			if (!actualCanBeNull)
+            
+            if (!actualCanBeNull)
 			{
 				EmitNullActualCheck(il, actual);
 			}
@@ -258,21 +301,22 @@ namespace ExpectBetter
 			{
 				il.Emit (OpCodes.Ldloc_1);
 				EmitLoadNumber(il, i);
-				il.Emit(OpCodes.Conv_I); // 'stelem' requires a nativeint index 
-				EmitLdArg (il, i + 1);
-				Box(il, parameters[i].ParameterType);
-				il.Emit (OpCodes.Stelem_I4);
+				il.Emit(OpCodes.Conv_I); // 'stelem' requires a nativeint index
+                EmitLdArgAsObject(il, i + 1, parameters[i].ParameterType);
+				//EmitLdArg (il, i + 1);
+				//Box(il, parameters[i].ParameterType);
+				il.Emit (OpCodes.Stelem, typeof(object));
 			}
 			
 			// Next, push relevant args for BadMatch
 
 			// Description of actual
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldfld, typeof(M).GetField("actualDescription", BindingFlags.Instance | BindingFlags.NonPublic));
+			il.Emit(OpCodes.Ldfld, @base.GetField("actualDescription", BindingFlags.Instance | BindingFlags.NonPublic));
 
 			// Description of expected
 			il.Emit(OpCodes.Ldarg_0);
-			il.Emit(OpCodes.Ldfld, typeof(M).GetField("expectedDescription", BindingFlags.Instance | BindingFlags.NonPublic));
+			il.Emit(OpCodes.Ldfld, @base.GetField("expectedDescription", BindingFlags.Instance | BindingFlags.NonPublic));
 
 			// Inverted
 			il.Emit (OpCodes.Ldarg_0);
@@ -322,7 +366,14 @@ namespace ExpectBetter
 		/// </typeparam>
 		private static Func<object, object> GenerateFactoryFunction<T>(Type createdType)
 		{
-			var constructorInfo = createdType.GetConstructor(new[] { typeof(T) });
+            var argType = typeof(T);
+
+            if (argType.IsGenericType && !argType.IsGenericTypeDefinition)
+            {
+                argType = argType.GetGenericTypeDefinition();
+            }
+
+            var constructorInfo = createdType.GetConstructors().First();
 
 			if (constructorInfo == null)
 			{
@@ -333,7 +384,7 @@ namespace ExpectBetter
 			var mil = method.GetILGenerator();
 			
 			mil.Emit (OpCodes.Ldarg_0);
-			mil.Emit (OpCodes.Unbox_Any, typeof(T));
+			mil.Emit (OpCodes.Unbox_Any, argType);
 			mil.Emit (OpCodes.Newobj, constructorInfo);
 			Box (mil, createdType);
 			mil.Emit (OpCodes.Ret);
@@ -434,7 +485,11 @@ namespace ExpectBetter
 		/// </param>
 		private static void Box (ILGenerator il, Type type)
 		{
-			if (type.IsValueType)
+            if (type.IsGenericParameter)
+            {
+                il.Emit(OpCodes.Box, type);
+            }
+            if (type.IsValueType)
 			{
 				il.Emit (OpCodes.Box, type);
 			}
@@ -443,6 +498,39 @@ namespace ExpectBetter
 				il.Emit (OpCodes.Castclass, typeof(object));
 			}
 		}
+
+        private static void EmitLdArgAsObject(ILGenerator il, int index, Type type)
+        {
+            if (type.IsGenericParameter)
+            {
+                Console.WriteLine("Loading arg {0} (type {1}) as object.", index, type.Name);
+                EmitLdArgA(il, index);
+                il.Emit(OpCodes.Ldobj, type);
+                il.Emit(OpCodes.Box, type);
+            }
+            else if (type.IsValueType)
+            {
+                EmitLdArg(il, index);
+                il.Emit(OpCodes.Box, type);
+            }
+            else
+            {
+                EmitLdArg(il, index);
+                il.Emit(OpCodes.Castclass, typeof(object));
+            }
+        }
+
+        private static void EmitLdArgA(ILGenerator il, int index)
+        {
+            if (index < 255)
+            {
+                il.Emit(OpCodes.Ldarga_S, index);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldarga, index);
+            }
+        }
 
 		/// <summary>
 		/// Emits an instruction to push a constant 32-bit integer on to the
@@ -550,10 +638,17 @@ namespace ExpectBetter
 		/// </typeparam>
 		private static ConstructorBuilder EmitPrivateConstructor<T>(TypeBuilder typeBuilder, FieldInfo actual, FieldInfo inverted)
 		{
+            var typeOfActual = typeof(T);
+
+            if (typeOfActual.IsGenericType && !typeOfActual.IsGenericTypeDefinition)
+            {
+                typeOfActual = typeOfActual.GetGenericTypeDefinition();
+            }
+
 			var cb = typeBuilder.DefineConstructor(
 				MethodAttributes.Private | MethodAttributes.SpecialName,
 				CallingConventions.HasThis,
-				new[] { typeof(T), typeof(bool) });
+				new[] { typeOfActual, typeof(bool) });
 
 			var il = cb.GetILGenerator();
 			var lblReturn = il.DefineLabel();
@@ -596,13 +691,20 @@ namespace ExpectBetter
 
 		private static ConstructorInfo EmitPublicConstructor<T>(TypeBuilder typeBuilder, ConstructorInfo privateCtor)
 		{
+            var typeOfActual = typeof(T);
+
+            if (typeOfActual.IsGenericType && !typeOfActual.IsGenericTypeDefinition)
+            {
+                typeOfActual = typeOfActual.GetGenericTypeDefinition();
+            }
+
 			var cb = typeBuilder.DefineConstructor(
 				MethodAttributes.Public | MethodAttributes.SpecialName,
 				CallingConventions.HasThis,
-				new[] { typeof(T) });
+				new[] { typeOfActual });
 
 			var il = cb.GetILGenerator();
-
+            
 			il.Emit (OpCodes.Ldarg_0);
 			il.Emit (OpCodes.Ldarg_1);
 			il.Emit (OpCodes.Ldc_I4_0);

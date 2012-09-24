@@ -4,7 +4,7 @@ using NUnit.Framework;
 using ExpectBetter;
 using ExpectBetter.Matchers;
 
-namespace SharpTests
+namespace ExpectBetterTests
 {
 	[TestFixture]
 	public class ExpectTests

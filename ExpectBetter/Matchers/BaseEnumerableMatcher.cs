@@ -17,7 +17,17 @@ namespace ExpectBetter.Matchers
 
 		public virtual bool ToContain(TItem expected)
 		{
-			return ToContain(expected, EqualityComparer<TItem>.Default);
+            var comparer = EqualityComparer<TItem>.Default;
+
+            foreach (var element in actual)
+            {
+                if (comparer.Equals(element, expected))
+                {
+                    return true;
+                }
+            }
+
+			return false;
 		}
 
 		public virtual bool ToContain(TItem expected, IEqualityComparer<TItem> comparer)
@@ -37,6 +47,11 @@ namespace ExpectBetter.Matchers
 
 			return false;
 		}
+
+        public virtual bool ToContainInOrder(IEnumerable<TItem> expected)
+        {
+            return ToContainInOrder(expected, EqualityComparer<TItem>.Default);
+        }
 
 		public virtual bool ToContainInOrder(IEnumerable<TItem> expected, IEqualityComparer<TItem> comparer)
 		{

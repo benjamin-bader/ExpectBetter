@@ -14,5 +14,4 @@ namespace ExpectBetter
 		protected string expectedDescription;
 		protected string failureMessage;
 	}
-	
 }

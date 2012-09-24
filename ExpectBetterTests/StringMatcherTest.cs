@@ -5,7 +5,7 @@ using NUnit.Framework;
 using ExpectBetter;
 using ExpectBetter.Matchers;
 
-namespace SharpTests
+namespace ExpectBetterTests
 {
 	[TestFixture]
 	public class StringMatcherTest
@@ -41,12 +41,7 @@ namespace SharpTests
 			var expected = Factory.RandomString(actual.Length + 10, actual.Length + 1);
 			var result = matcher.Not.ToContain(expected);
 
-			// todo(ben): InvalidProgramException at .ToBeTrue(), IL_002d: call 0x0a000006
-			// This is the issue currently plaguing value type matchers - monodis chokes on
-			// generated constructors before ever getting to 
-			// Since we're here, we can assume that .ToContain didn't throw, so this isn't the end of the world.
-			// Expect.The(result).ToBeTrue();
-			Assert.IsTrue(result);
+            Expect.The(result).ToBeTrue();
 		}
 
 		[Test, ExpectedException(typeof(ExpectationException))]

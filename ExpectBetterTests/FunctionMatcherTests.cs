@@ -2,7 +2,7 @@ using System;
 using NUnit.Framework;
 using ExpectBetter;
 
-namespace SharpTests
+namespace ExpectBetterTests
 {
 	[TestFixture]
 	public class FunctionMatcherTests
@@ -10,8 +10,7 @@ namespace SharpTests
 		[Test]
 		public void ActionMatcher_ToThrow_CatchesNamedExceptionTypes()
 		{
-			var result = Expect.The(delegate { throw new DivideByZeroException(); }).ToThrow<DivideByZeroException>();
-			Assert.IsTrue(result);
+			Expect.The(delegate { throw new DivideByZeroException(); }).ToThrow<DivideByZeroException>();
 		}
 
 		[Test, ExpectedException(typeof(ExpectationException))]
@@ -35,22 +34,19 @@ namespace SharpTests
 		[Test]
 		public void ActionMatcher_Not_ToThrow_WhenOtherExceptionThrown_ReturnsTrue()
 		{
-			var result = Expect.The(delegate { throw new Exception(); }).Not.ToThrow<ApplicationException>();
-			Assert.IsTrue(result);
+			Expect.The(delegate { throw new Exception(); }).Not.ToThrow<ApplicationException>();
 		}
 
 		[Test]
 		public void ActionMatcher_Not_ToThrow_WhenNoExceptionThrown_ReturnsTrue()
 		{
-			var result = Expect.The(delegate { }).Not.ToThrow<Exception>();
-			Assert.IsTrue(result);
+			Expect.The(delegate { }).Not.ToThrow<Exception>();
 		}
 
 		[Test]
 		public void FunctionMatcher_ToThrow_CatchesNamedExceptionTypes()
 		{
-			var result = Expect.The<int>(delegate { throw new DivideByZeroException(); }).ToThrow<DivideByZeroException>();
-			Assert.IsTrue(result);
+			Expect.The<int>(delegate { throw new DivideByZeroException(); }).ToThrow<DivideByZeroException>();
 		}
 		
 		[Test, ExpectedException(typeof(ExpectationException))]
@@ -74,15 +70,13 @@ namespace SharpTests
 		[Test]
 		public void FunctionMatcher_Not_ToThrow_WhenOtherExceptionThrown_ReturnsTrue()
 		{
-			var result = Expect.The<int>(delegate { throw new Exception(); }).Not.ToThrow<ApplicationException>();
-			Assert.IsTrue(result);
+			Expect.The<int>(delegate { throw new Exception(); }).Not.ToThrow<ApplicationException>();
 		}
 		
 		[Test]
 		public void FunctionMatcher_Not_ToThrow_WhenNoExceptionThrown_ReturnsTrue()
 		{
-			var result = Expect.The(() => 1).Not.ToThrow<Exception>();
-			Assert.IsTrue(result);
+			Expect.The(() => 1).Not.ToThrow<Exception>();
 		}
 	}
 }

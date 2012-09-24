@@ -4,8 +4,6 @@ using ExpectBetter.Matchers;
 
 namespace ExpectBetter.Matchers
 {
-
-
 	public class ComparableMatcher<T> : BaseObjectMatcher<IComparable<T>, ComparableMatcher<T>>
 	{
 		public virtual bool ToEqual(T expected)
