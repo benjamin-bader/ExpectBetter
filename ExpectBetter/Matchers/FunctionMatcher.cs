@@ -31,6 +31,7 @@ namespace ExpectBetter.Matchers
             try
             {
                 actual();
+                actualDescription = "a function that completed successfully";
             }
             catch (TException)
             {
