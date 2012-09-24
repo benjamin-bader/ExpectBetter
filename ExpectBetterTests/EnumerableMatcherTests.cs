@@ -44,10 +44,10 @@ namespace ExpectBetterTests
         [Test]
         public void ToContain_UsesEqualityMatcher()
         {
-            var firstValue  = "just a string";
+            var firstValue = "just a string";
             var secondValue = "don't mind me";
             var comparer = new StringLengthEqualityMatcher();
-            
+
             Expect.The(new[] { firstValue }.AsEnumerable()).ToContain(secondValue, comparer);
         }
 

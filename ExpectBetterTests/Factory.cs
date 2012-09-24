@@ -3,8 +3,12 @@ using System.Text;
 
 namespace ExpectBetterTests
 {
-	public static class Factory
-	{
+    public static class Factory
+    {
+        private const string Alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        private const string Numeric = "1234567890";
+        private const string Alphanumeric = Alpha + Numeric;
+
         [ThreadStatic]
         private static Random random;
 
@@ -19,22 +23,17 @@ namespace ExpectBetterTests
             }
         }
 
-		private const string Alpha = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		private const string Numeric = "1234567890";
-		private const string Alphanumeric = Alpha + Numeric;
+        public static string RandomString(int maxLength = 10, int minLength = 1)
+        {
+            var length = Random.Next(minLength, maxLength + 1);
+            var sb = new StringBuilder(length);
 
-		public static string RandomString(int maxLength = 10, int minLength = 1)
-		{
-			var length = Random.Next(minLength, maxLength + 1);
-			var sb = new StringBuilder(length);
+            for (var i = 0; i < length; ++i)
+            {
+                sb.Append(Alphanumeric[random.Next(Alphanumeric.Length)]);
+            }
 
-			for (var i = 0; i < length; ++i)
-			{
-				sb.Append(Alphanumeric[random.Next(Alphanumeric.Length)]);
-			}
-
-			return sb.ToString();
-		}
-	}
+            return sb.ToString();
+        }
+    }
 }
-

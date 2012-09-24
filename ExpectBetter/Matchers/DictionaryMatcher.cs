@@ -3,29 +3,28 @@ using System.Collections.Generic;
 
 namespace ExpectBetter.Matchers
 {
-	public class DictionaryMatcher<K, V> : BaseCollectionMatcher<IDictionary<K, V>, KeyValuePair<K, V>, DictionaryMatcher<K, V>>
-	{
-		public virtual bool ToContainKey(K expected)
-		{
-			return actual.ContainsKey(expected);
-		}
+    public class DictionaryMatcher<K, V> : BaseCollectionMatcher<IDictionary<K, V>, KeyValuePair<K, V>, DictionaryMatcher<K, V>>
+    {
+        public virtual bool ToContainKey(K expected)
+        {
+            return actual.ContainsKey(expected);
+        }
 
-		public virtual bool ToContainKeyValuePair(KeyValuePair<K, V> expected)
-		{
-			return actual.Contains(expected);
-		}
+        public virtual bool ToContainKeyValuePair(KeyValuePair<K, V> expected)
+        {
+            return actual.Contains(expected);
+        }
 
-		public virtual bool ToContainKeyAndValue(K key, V value)
-		{
-			V maybeValue;
+        public virtual bool ToContainKeyAndValue(K key, V value)
+        {
+            V maybeValue;
 
-			if (!actual.TryGetValue(key, out maybeValue))
-			{
-				return false;
-			}
+            if (!actual.TryGetValue(key, out maybeValue))
+            {
+                return false;
+            }
 
-			return value.Equals(maybeValue);
-		}
-	}
+            return value.Equals(maybeValue);
+        }
+    }
 }
-
