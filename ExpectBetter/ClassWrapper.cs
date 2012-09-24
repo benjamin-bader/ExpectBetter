@@ -21,7 +21,7 @@ namespace ExpectBetter
         internal static readonly AssemblyBuilder assemblyBuilder;
         internal static readonly ModuleBuilder moduleBuilder;
 
-        private static readonly ConstructorInfo exnCtor = typeof(ExpectationException).GetConstructor(new[] { typeof(string) });
+        private static readonly ConstructorInfo NullActualExceptionConstructor = typeof(ExpectationException).GetConstructor(new[] { typeof(string) });
         private static readonly MethodInfo BadMatchInfo = typeof(ClassWrapper).GetMethod("BadMatch", BindingFlags.Static | BindingFlags.Public);
         private static readonly MethodInfo GiveBugReportInfo = typeof(ClassWrapper).GetMethod("GiveBugReport", BindingFlags.Static | BindingFlags.Public);
 
@@ -525,7 +525,7 @@ namespace ExpectBetter
             il.Emit(OpCodes.Brfalse, lblOk);
 
             il.Emit(OpCodes.Ldstr, "Actual cannot be null.");
-            il.Emit(OpCodes.Newobj, exnCtor);
+            il.Emit(OpCodes.Newobj, NullActualExceptionConstructor);
             il.Emit(OpCodes.Throw);
 
             il.MarkLabel(lblOk);
