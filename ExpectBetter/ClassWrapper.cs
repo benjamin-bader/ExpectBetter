@@ -76,8 +76,8 @@ namespace ExpectBetter
 			var message = new StringBuilder("Failure: ")
 				.Append ("Expected ")
 				.Append (actualDesc)
-				.Append (inverted ? " not " : " ")
-				.Append (System.Text.RegularExpressions.Regex.Replace(methodName, "([A-Z])", "$1").ToLowerInvariant())
+				.Append (inverted ? " not" : "")
+				.Append (System.Text.RegularExpressions.Regex.Replace(methodName, "([A-Z])", " $1").ToLowerInvariant())
 				.Append (" ")
 				.Append (expectedDesc)
 				.ToString();
@@ -99,7 +99,7 @@ namespace ExpectBetter
 
 		private static string ToStringRespectingNulls (object obj)
 		{
-			return ReferenceEquals (obj, null)
+            return ReferenceEquals (obj, null)
 				? "null"
 				: obj.ToString ();
 		}
@@ -324,7 +324,9 @@ namespace ExpectBetter
 			
 			// Actual
 			il.Emit (OpCodes.Ldarg_0);
-			il.Emit (OpCodes.Ldfld, actual);
+			il.Emit (OpCodes.Ldflda, actual);
+            il.Emit (OpCodes.Ldobj, actual.FieldType);
+            il.Emit (OpCodes.Box, actual.FieldType);
 			
 			// Method name
 			il.Emit (OpCodes.Ldstr, mi.Name);
