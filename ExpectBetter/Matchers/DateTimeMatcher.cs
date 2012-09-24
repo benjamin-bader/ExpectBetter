@@ -2,6 +2,9 @@ using System;
 
 namespace ExpectBetter
 {
+    /// <summary>
+    /// Exposes test methods on <see cref="DateTime"/> values.
+    /// </summary>
     public class DateTimeMatcher : BaseMatcher<DateTime, DateTimeMatcher>
     {
         public virtual bool ToBeEarlierThan(DateTime expected)

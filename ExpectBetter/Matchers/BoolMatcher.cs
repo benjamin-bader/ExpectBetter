@@ -4,6 +4,9 @@ using ExpectBetter.Matchers;
 
 namespace ExpectBetter.Matchers
 {
+    /// <summary>
+    /// Exposes test methods for <see cref="Boolean"/> values.
+    /// </summary>
     public class BoolMatcher : BaseMatcher<bool, BoolMatcher>
     {
         public virtual bool ToBeTrue()

@@ -4,6 +4,9 @@ using ExpectBetter.Matchers;
 
 namespace ExpectBetter.Matchers
 {
+    /// <summary>
+    /// Exposes test methods on strings.
+    /// </summary>
     public class StringMatcher : BaseObjectMatcher<string, StringMatcher>
     {
         public virtual bool ToBeLongerThan(string expected)

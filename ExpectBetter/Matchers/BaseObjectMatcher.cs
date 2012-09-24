@@ -2,6 +2,16 @@ using System;
 
 namespace ExpectBetter.Matchers
 {
+    /// <summary>
+    /// Exposes matcher methods on <see cref="Object"/>.  Not intended to be
+    /// exposed directly; use <see cref="ObjectMatcher"/> instead.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type being tested.
+    /// </typeparam>
+    /// <typeparam name="M">
+    /// The type of the most-derived matcher.
+    /// </typeparam>
     public class BaseObjectMatcher<T, M> : BaseMatcher<T, M>
         where M : BaseObjectMatcher<T, M>
     {

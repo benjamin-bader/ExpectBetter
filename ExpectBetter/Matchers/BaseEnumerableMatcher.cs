@@ -6,6 +6,20 @@ using ExpectBetter.Matchers;
 
 namespace ExpectBetter.Matchers
 {
+    /// <summary>
+    /// Exposes matcher methods on <see cref="IEnumerable&lt;TItem&gt;"/>
+    /// objects.  Not intended to be exposed directly; use
+    /// <see cref="EnumerableMatcher&lt;T&gt;"/> instead.
+    /// </summary>
+    /// <typeparam name="TEnumerable">
+    /// The test type, implementing <see cref="IEnumerable&lt;TItem&gt;"/>.
+    /// </typeparam>
+    /// <typeparam name="TItem">
+    /// The type of element contained in <typeparamref name="TEnumerable"/>.
+    /// </typeparam>
+    /// <typeparam name="M">
+    /// The type of the most-derived matcher.
+    /// </typeparam>
     public class BaseEnumerableMatcher<TEnumerable, TItem, M> : BaseObjectMatcher<TEnumerable, M>
         where TEnumerable : IEnumerable<TItem>
         where M : BaseEnumerableMatcher<TEnumerable, TItem, M>
