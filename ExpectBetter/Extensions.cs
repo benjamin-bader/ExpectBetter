@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ExpectBetter
 {
-    public static class Extensions
+    internal static class Extensions
     {
         /// <summary>
         /// Cycle the specified collection.
@@ -28,7 +28,7 @@ namespace ExpectBetter
         /// <typeparam name='T'>
         /// The type of element contained in the collection.
         /// </typeparam>
-        public static IEnumerable<T> Cycle<T>(this IEnumerable<T> collection)
+        internal static IEnumerable<T> Cycle<T>(this IEnumerable<T> collection)
         {
             if (collection == null)
             {
@@ -100,7 +100,7 @@ namespace ExpectBetter
         /// which <paramref name="predicate"/> returned <see langword="true"/>,
         /// the second containing elements for which it returned <see langword="false"/>.
         /// </returns>			
-        public static Tuple<IEnumerable<T>, IEnumerable<T>> Partition<T>(this IEnumerable<T> collection, Predicate<T> predicate)
+        internal static Tuple<IEnumerable<T>, IEnumerable<T>> Partition<T>(this IEnumerable<T> collection, Predicate<T> predicate)
         {
             var trues = new List<T>();
             var falses = new List<T>();
@@ -136,7 +136,7 @@ namespace ExpectBetter
         /// <typeparam name='T'>
         /// The type of element contained in the resulting collection.
         /// </typeparam>
-        public static IEnumerable<T> Interject<T>(this IEnumerable<T> collection, IEnumerable<T> interjection)
+        internal static IEnumerable<T> Interject<T>(this IEnumerable<T> collection, IEnumerable<T> interjection)
         {
             if (collection == null)
             {

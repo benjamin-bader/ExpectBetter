@@ -5,15 +5,13 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 
-namespace ExpectBetter
+namespace ExpectBetter.Codegen
 {
-    public static class ClassWrapper
+    internal static class ClassWrapper
     {
         private const string AssemblyName = "ExpectBetterWrappers";
         private const string AssemblyFileName = AssemblyName + ".dll";
         private const string WrapperPrefix = "WrapperOf$";
-
-        private const string BugReportMessage = "If you see this message, you have encounted a bug in ExpectBetterations.  Please report this error (and stack trace) to the developers at https://github.com/benjamin-bader/ExpectBetter.  Thanks, and we're sorry!";
 
         private static Dictionary<Type, Type> WrappedTypes = new Dictionary<Type, Type>();
         
@@ -21,9 +19,9 @@ namespace ExpectBetter
         internal static readonly AssemblyBuilder assemblyBuilder;
         internal static readonly ModuleBuilder moduleBuilder;
 
-        private static readonly ConstructorInfo NullActualExceptionConstructor = typeof(ExpectationException).GetConstructor(new[] { typeof(string) });
-        private static readonly MethodInfo BadMatchInfo = typeof(ClassWrapper).GetMethod("BadMatch", BindingFlags.Static | BindingFlags.Public);
-        private static readonly MethodInfo GiveBugReportInfo = typeof(ClassWrapper).GetMethod("GiveBugReport", BindingFlags.Static | BindingFlags.Public);
+        private static readonly MethodInfo IllegalNullActualInfo = typeof(Errors).GetMethod("IllegalNullActual", BindingFlags.Static | BindingFlags.Public);
+        private static readonly MethodInfo BadMatchInfo = typeof(Errors).GetMethod("BadMatch", BindingFlags.Static | BindingFlags.Public);
+        private static readonly MethodInfo GiveBugReportInfo = typeof(Errors).GetMethod("GiveBugReport", BindingFlags.Static | BindingFlags.Public);
 
         static ClassWrapper()
         {
@@ -39,67 +37,26 @@ namespace ExpectBetter
         }
 
 #if DEBUG
-        public static void SaveAssembly()
+        internal static void SaveAssembly()
         {
             System.IO.File.Delete(AssemblyFileName);
             assemblyBuilder.Save(AssemblyFileName);
         }
 #endif
 
-        public static M Wrap<T, M>(T actual)
+        internal static M Wrap<T, M>(T actual)
             where M : BaseMatcher<T, M>
         {
             var wrapper = RetrieveWrapper<T, M>();
 
             if (wrapper.ContainsGenericParameters)
             {
-                // HACK wtf
+                // HACK wtf - need to validate this!
                 var parameters = typeof(T).GetGenericArguments();
                 wrapper = wrapper.MakeGenericType(parameters);
             }
 
             return (M)Activator.CreateInstance(wrapper, new object[] { actual });
-            //return (M) wrapper((object)actual);
-        }
-
-        public static void GiveBugReport(Exception ex)
-        {
-            throw new ExpectationException(BugReportMessage, ex);
-        }
-
-        public static void BadMatch(string actualDesc, string expectedDesc, bool inverted, object actual, string methodName, object[] expectedArgs)
-        {
-            actualDesc = "[" + (actualDesc ?? ToStringRespectingNulls(actual)) + "]";
-            expectedDesc = expectedDesc ?? DescriptionOfExpected(expectedArgs);
-            var message = new StringBuilder("Failure: ")
-                .Append("Expected ")
-                .Append(actualDesc)
-                .Append(inverted ? " not" : "")
-                .Append(System.Text.RegularExpressions.Regex.Replace(methodName, "([A-Z])", " $1").ToLowerInvariant())
-                .Append(" ")
-                .Append(expectedDesc)
-                .ToString();
-
-            Console.WriteLine(message);
-
-            throw new ExpectationException(message);
-        }
-
-        private static string DescriptionOfExpected(object[] expectedArgs)
-        {
-            return expectedArgs
-                .Select(ToStringRespectingNulls)
-                .Select(str => "[" + str + "]")
-                .Interject(new[] { ", " })
-                .Aggregate(new StringBuilder(), (sb, str) => sb.Append(str))
-                .ToString();
-        }
-
-        private static string ToStringRespectingNulls(object obj)
-        {
-            return ReferenceEquals(obj, null)
-                ? "null"
-                : obj.ToString();
         }
 
         /// <summary>
@@ -124,7 +81,7 @@ namespace ExpectBetter
         private static Type RetrieveWrapper<T, M>()
             where M : BaseMatcher<T, M>
         {
-            var @base = typeof(M);
+            var @base = GenericDefinitionOf<M>();
             Type result = null;
 
             if (@base.IsGenericType && !@base.IsGenericTypeDefinition)
@@ -171,29 +128,9 @@ namespace ExpectBetter
             if (@base.IsGenericTypeDefinition)
             {
                 var genericArgs = @base.GetGenericArguments();
-                var typeNames = Array.ConvertAll(genericArgs, arg => arg.Name);
-                var parameterBuilders = builder.DefineGenericParameters(typeNames);
+                var parameterBuilders = builder.DefineGenericParameters(Array.ConvertAll(genericArgs, arg => arg.Name));
 
-                for (var i = 0; i < parameterBuilders.Length; ++i)
-                {
-                    var baseArg = genericArgs[i];
-                    var argBuilder = parameterBuilders[i];
-                    var interfacesAndBaseType = baseArg.GetGenericParameterConstraints().Partition(t => t.IsInterface);
-                    var interfaces = interfacesAndBaseType.Item1.ToArray();
-                    var baseType = interfacesAndBaseType.Item2.SingleOrDefault();
-
-                    argBuilder.SetGenericParameterAttributes(baseArg.GenericParameterAttributes);
-
-                    if (baseType != null)
-                    {
-                        argBuilder.SetBaseTypeConstraint(baseType);
-                    }
-
-                    if (interfaces.Length > 0)
-                    {
-                        argBuilder.SetInterfaceConstraints(interfaces);
-                    }
-                }
+                DefineGenericArguments(genericArgs, parameterBuilders);
             }
 
             var actual = builder.BaseType.GetField("actual", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -204,6 +141,7 @@ namespace ExpectBetter
 
             foreach (var mi in @base.GetMethods(BindingFlags.Instance | BindingFlags.Public))
             {
+                // Skip constructors and System.Object methods - anything else is fair game.
                 if (mi.IsSpecialName || typeof(object) == mi.DeclaringType)
                 {
                     continue;
@@ -211,7 +149,7 @@ namespace ExpectBetter
 
                 if (typeof(bool) != mi.ReturnType)
                 {
-                    var message = string.Format("Invalid return type '{0}' in method '{1}'", mi.ReturnType, mi.Name);
+                    var message = string.Format("Invalid return type '{0}' in method '{1}' - must be System.Boolean.", mi.ReturnType, mi.Name);
                     throw new NotSupportedException(message);
                 }
 
@@ -224,7 +162,6 @@ namespace ExpectBetter
             }
 
             return builder.CreateType();
-
         }
 
         private static void WrapTestMethod<T>(MethodInfo mi, TypeBuilder builder, FieldInfo actual, FieldInfo inverted, Type @base)
@@ -247,10 +184,13 @@ namespace ExpectBetter
                 MethodAttributes.Public | MethodAttributes.Virtual,
                 typeof(bool),
                 Array.ConvertAll(parameters, p => p.ParameterType));
-
+            
             if (mi.IsGenericMethod)
             {
-                DefineGenericParameters(wrapper, mi);
+                var genericArguments = mi.GetGenericArguments();
+                var parameterBuilders = wrapper.DefineGenericParameters(genericArguments.Select(arg => arg.Name).ToArray());
+
+                DefineGenericArguments(genericArguments, parameterBuilders);
             }
 
             var actualCanBeNull = mi.GetCustomAttributes(typeof(AllowNullActualAttribute), true).Length > 0;
@@ -272,8 +212,7 @@ namespace ExpectBetter
 
             for (var i = 0; i < parameters.Length; ++i)
             {
-                Console.WriteLine("Method {0}: loading arg {1}", mi.Name, i + 1);
-                EmitLdArg(il, i + 1);
+                il.EmitLdArg(i + 1);
             }
 
             il.Emit(OpCodes.Call, mi);
@@ -290,18 +229,16 @@ namespace ExpectBetter
             il.MarkLabel(lblErr);
 
             // First, marshal the params into an object array
-            EmitLoadNumber(il, parameters.Length);
+            il.EmitLoadNumber(parameters.Length);
             il.Emit(OpCodes.Newarr, typeof(object));
             il.Emit(OpCodes.Stloc_1);
 
             for (var i = 0; i < parameters.Length; ++i)
             {
                 il.Emit(OpCodes.Ldloc_1);
-                EmitLoadNumber(il, i);
+                il.EmitLoadNumber(i);
                 il.Emit(OpCodes.Conv_I); // 'stelem' requires a nativeint index
-                EmitLdArgAsObject(il, i + 1, parameters[i].ParameterType);
-                //EmitLdArg (il, i + 1);
-                //Box(il, parameters[i].ParameterType);
+                il.EmitLdArgAsObject(i + 1, parameters[i].ParameterType);
                 il.Emit(OpCodes.Stelem, typeof(object));
             }
 
@@ -350,154 +287,6 @@ namespace ExpectBetter
         }
 
         /// <summary>
-        /// Replicates the base method's generic arguments and their constraints.
-        /// </summary>
-        /// <param name='wrapper'>
-        /// The <see cref="MethodBuilder"/> constructing the override.
-        /// </param>
-        /// <param name='mi'>
-        /// The <see cref="MethodInfo"/> representing the base method.
-        /// </param>
-        /// <exception cref="InvalidProgramException">
-        /// Thrown when more than one base-type constraint is present on a parameter.
-        /// This shouldn't happen, but malformed IL could theoretically cause this.
-        /// </exception>
-        private static void DefineGenericParameters(MethodBuilder wrapper, MethodInfo mi)
-        {
-            var arguments = mi.GetGenericArguments();
-            var names = Array.ConvertAll(arguments, arg => arg.Name);
-            var parameters = wrapper.DefineGenericParameters(names);
-
-            for (var i = 0; i < arguments.Length; ++i)
-            {
-                var arg = arguments[i];
-                var p = parameters[i];
-                var constraintsAndBaseType = arg.GetGenericParameterConstraints().Partition(t => t.IsInterface);
-                var interfaces = constraintsAndBaseType.Item1.ToArray();
-                var baseTypeArray = constraintsAndBaseType.Item2.ToArray();
-
-                if (arg.GenericParameterAttributes != GenericParameterAttributes.None)
-                {
-                    p.SetGenericParameterAttributes(arg.GenericParameterAttributes);
-                }
-
-                if (interfaces.Length > 0)
-                {
-                    p.SetInterfaceConstraints(interfaces);
-                }
-
-                if (baseTypeArray.Length == 1)
-                {
-                    p.SetBaseTypeConstraint(baseTypeArray[0]);
-                }
-                else if (baseTypeArray.Length > 1)
-                {
-                    throw new InvalidProgramException("How can a type possibly have more than one base class constraint?");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Emits an instruction to load the argument from the given constant
-        /// index, using the most efficient encoding.
-        /// </summary>
-        /// <param name='il'>
-        /// The <see cref="ILGenerator"/> that should emit the instruction.
-        /// </param>
-        /// <param name='index'>
-        /// The argument index.  For instance methods, an index of zero
-        /// corresponds to the <see langword="this"/> keyword.
-        /// </param>
-        private static void EmitLdArg(ILGenerator il, int index)
-        {
-            switch (index)
-            {
-                case 0: il.Emit(OpCodes.Ldarg_0); break;
-                case 1: il.Emit(OpCodes.Ldarg_1); break;
-                case 2: il.Emit(OpCodes.Ldarg_2); break;
-                case 3: il.Emit(OpCodes.Ldarg_3); break;
-                default:
-                    if (index < 256)
-                    {
-                        il.Emit(OpCodes.Ldarg_S, index);
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Ldarg, index);
-                    }
-                    break;
-            }
-        }
-
-        private static void EmitLdArgAsObject(ILGenerator il, int index, Type type)
-        {
-            if (type.IsGenericParameter)
-            {
-                Console.WriteLine("Loading arg {0} (type {1}) as object.", index, type.Name);
-                EmitLdArgA(il, index);
-                il.Emit(OpCodes.Ldobj, type);
-                il.Emit(OpCodes.Box, type);
-            }
-            else if (type.IsValueType)
-            {
-                EmitLdArg(il, index);
-                il.Emit(OpCodes.Box, type);
-            }
-            else
-            {
-                EmitLdArg(il, index);
-                il.Emit(OpCodes.Castclass, typeof(object));
-            }
-        }
-
-        private static void EmitLdArgA(ILGenerator il, int index)
-        {
-            if (index < 255)
-            {
-                il.Emit(OpCodes.Ldarga_S, index);
-            }
-            else
-            {
-                il.Emit(OpCodes.Ldarga, index);
-            }
-        }
-
-        /// <summary>
-        /// Emits an instruction to push a constant 32-bit integer on to the
-        /// stack, using the most efficient encoding available.
-        /// </summary>
-        /// <param name='il'>
-        /// The <see cref="ILGenerator"/> to emit the load instruction.
-        /// </param>
-        /// <param name='number'>
-        /// The constant to be loaded.
-        /// </param>
-        private static void EmitLoadNumber(ILGenerator il, int number)
-        {
-            switch (number)
-            {
-                case -1: il.Emit(OpCodes.Ldc_I4_M1); return;
-                case 0: il.Emit(OpCodes.Ldc_I4_0); return;
-                case 1: il.Emit(OpCodes.Ldc_I4_1); return;
-                case 2: il.Emit(OpCodes.Ldc_I4_2); return;
-                case 3: il.Emit(OpCodes.Ldc_I4_3); return;
-                case 4: il.Emit(OpCodes.Ldc_I4_4); return;
-                case 5: il.Emit(OpCodes.Ldc_I4_5); return;
-                case 6: il.Emit(OpCodes.Ldc_I4_6); return;
-                case 7: il.Emit(OpCodes.Ldc_I4_7); return;
-                case 8: il.Emit(OpCodes.Ldc_I4_8); return;
-            }
-
-            if (number >= -128 && number <= 127)
-            {
-                il.Emit(OpCodes.Ldc_I4_S, (sbyte)number);
-                return;
-            }
-
-            il.Emit(OpCodes.Ldc_I4, number);
-        }
-
-        /// <summary>
         /// Emits instructions verifying that the value stored in the given
         /// field <paramref name="actual"/> is not <see langword="null"/>.
         /// Emits nothing if the type of the given field is a value type.
@@ -524,9 +313,7 @@ namespace ExpectBetter
             il.Emit(OpCodes.Ceq);
             il.Emit(OpCodes.Brfalse, lblOk);
 
-            il.Emit(OpCodes.Ldstr, "Actual cannot be null.");
-            il.Emit(OpCodes.Newobj, NullActualExceptionConstructor);
-            il.Emit(OpCodes.Throw);
+            il.Emit(OpCodes.Call, IllegalNullActualInfo);
 
             il.MarkLabel(lblOk);
         }
@@ -568,12 +355,7 @@ namespace ExpectBetter
         /// </typeparam>
         private static ConstructorBuilder EmitPrivateConstructor<T>(TypeBuilder typeBuilder, FieldInfo actual, FieldInfo inverted)
         {
-            var typeOfActual = typeof(T);
-
-            if (typeOfActual.IsGenericType && !typeOfActual.IsGenericTypeDefinition)
-            {
-                typeOfActual = typeOfActual.GetGenericTypeDefinition();
-            }
+            var typeOfActual = GenericDefinitionOf<T>();
 
             var cb = typeBuilder.DefineConstructor(
                 MethodAttributes.Private | MethodAttributes.SpecialName,
@@ -619,14 +401,27 @@ namespace ExpectBetter
             return cb;
         }
 
+        /// <summary>
+        /// Creates a public constructor on a dynamic type that takes one
+        /// argument of the generic type definition of <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the sole argument by the new constructor.
+        /// </typeparam>
+        /// <param name="typeBuilder">
+        /// The type under construction.
+        /// </param>
+        /// <param name="privateCtor">
+        /// The private constructor to which the new public constructor should
+        /// delegate.
+        /// </param>
+        /// <returns>
+        /// Returns a <see cref="ConstructorInfo"/> describing the new
+        /// constructor.
+        /// </returns>
         private static ConstructorInfo EmitPublicConstructor<T>(TypeBuilder typeBuilder, ConstructorInfo privateCtor)
         {
-            var typeOfActual = typeof(T);
-
-            if (typeOfActual.IsGenericType && !typeOfActual.IsGenericTypeDefinition)
-            {
-                typeOfActual = typeOfActual.GetGenericTypeDefinition();
-            }
+            var typeOfActual = GenericDefinitionOf<T>();
 
             var cb = typeBuilder.DefineConstructor(
                 MethodAttributes.Public | MethodAttributes.SpecialName,
@@ -642,6 +437,77 @@ namespace ExpectBetter
             il.Emit(OpCodes.Ret);
 
             return cb;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="Type"/> of <typeparamref name="T"/>, retrieving
+        /// the generic type definition of <typeparamref name="T"/> if applicable.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type whose runtime representation is to be retrieved.
+        /// </typeparam>
+        /// <returns>
+        /// Returns the generic definition of <typeparamref name="T"/>, or
+        /// simply <typeparamref name="T"/> if it is not generic or already a
+        /// generic type definition.
+        /// </returns>
+        private static Type GenericDefinitionOf<T>()
+        {
+            var type = typeof(T);
+
+            if (type.IsGenericType && !type.IsGenericTypeDefinition)
+            {
+                type = type.GetGenericTypeDefinition();
+            }
+
+            return type;
+        }
+
+        /// <summary>
+        /// Applies generic constraints present on a list of generic
+        /// <paramref name="arguments"/> to a list of paramter builders under
+        /// construction.
+        /// </summary>
+        /// <param name='arguments'>
+        /// The generic arguments whose constraints are to be copied.
+        /// </param>
+        /// <param name='parameters'>
+        /// The parameter builders to which to apply the constraints.
+        /// </param>
+        private static void DefineGenericArguments(Type[] arguments, GenericTypeParameterBuilder[] parameters)
+        {
+            if (parameters.Length != arguments.Length)
+            {
+                throw new InvalidProgramException(string.Format("Created {0} generic parameters where {1} were expected.", parameters.Length, arguments.Length));
+            }
+
+            for (var i = 0; i < arguments.Length; ++i)
+            {
+                var arg = arguments[i];
+                var p = parameters[i];
+                var constraintsAndBaseType = arg.GetGenericParameterConstraints().Partition(t => t.IsInterface);
+                var interfaces = constraintsAndBaseType.Item1.ToArray();
+                var baseTypeArray = constraintsAndBaseType.Item2.ToArray();
+
+                if (arg.GenericParameterAttributes != GenericParameterAttributes.None)
+                {
+                    p.SetGenericParameterAttributes(arg.GenericParameterAttributes);
+                }
+
+                if (interfaces.Length > 0)
+                {
+                    p.SetInterfaceConstraints(interfaces);
+                }
+
+                if (baseTypeArray.Length == 1)
+                {
+                    p.SetBaseTypeConstraint(baseTypeArray[0]);
+                }
+                else if (baseTypeArray.Length > 1)
+                {
+                    throw new InvalidProgramException("How can a type possibly have more than one base class constraint?");
+                }
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ namespace ExpectBetter
     /// decorated matcher method.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, Inherited = true)]
-    public class AllowNullActualAttribute : Attribute
+    public sealed class AllowNullActualAttribute : Attribute
     {
     }
 }

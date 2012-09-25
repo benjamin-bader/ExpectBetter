@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -6,12 +7,9 @@ using System.Runtime.CompilerServices;
 
 [assembly: AssemblyTitle("ExpectBetter")]
 [assembly: AssemblyDescription("Better Assertions For .NET")]
-[assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("bendb.com")]
 [assembly: AssemblyProduct("ExpectBetter")]
-[assembly: AssemblyCopyright("bendb")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: AssemblyCopyright("© 2012 Ben Bader All Rights Reserved")]
 
 // The assembly version has the format "{Major}.{Minor}.{Build}.{Revision}".
 // The form "{Major}.{Minor}.*" will automatically update the build and revision,
@@ -25,3 +23,4 @@ using System.Runtime.CompilerServices;
 //[assembly: AssemblyDelaySign(false)]
 //[assembly: AssemblyKeyFile("")]
 
+[assembly: InternalsVisibleTo("ExpectBetterTests")]
