@@ -33,7 +33,12 @@ namespace ExpectBetter.Codegen
 #endif
             assemblyName = new AssemblyName(AssemblyName);
             assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, assemblyBuilderAccess);
+
+#if DEBUG
             moduleBuilder = assemblyBuilder.DefineDynamicModule(AssemblyName, AssemblyFileName);
+#else
+            moduleBuilder = assemblyBuilder.DefineDynamicModule(AssemblyName);
+#endif
         }
 
 #if DEBUG
