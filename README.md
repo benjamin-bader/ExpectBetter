@@ -156,9 +156,9 @@ Basically, the mechanics of assertions are the same no matter what the language 
 
 This code requires sufficient .NET privileges to define and run dynamic assemblies; if your test environment has tighter constraints, you may encounter problems.
 
-Can I change the error messages?
-----------------------------------------
-By default, error messages use `.ToString()` on your expected and actual values.  If you want something better, your matcher method can set the `actualDescription` and `expectedDescription` fields.
+What if null is a legal value for my object?
+------------------------
+ExpectBetter is opinionated and dislikes `null`; it would much prefer that some form of `Option<T>` be used instead.  Nevertheless it respects that others feel differently, and so you can add an `[AllowNullActual]` attribute to your test methods.  With this in place, you will no longer get failures when your tested value is `null`.
 
 Known Issues
 ================================
