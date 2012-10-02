@@ -16,9 +16,12 @@ Get Started
 ========================
 If you use NuGet: `Install-Package ExpectBetter` in the Package Management Console for your test projects.
 
-If you don't use NuGet, please consider using it.  After your consideration, you can check out this repository, build it, and add a reference to `ExpectBetter.dll` to your test projects.
+If you don't use NuGet, please consider using it.  After your consideration, you can check out this repository and build it.
 
-Once you have a reference, add the ExpectBetter namespace and get to testing!
+If you'd rather not build it, you can download the library itself here at the Github project site:
+* https://github.com/downloads/benjamin-bader/ExpectBetter/ExpectBetter.dll
+
+Once you have the library, add a reference to `ExpectBetter.dll` to your test projects, add the ExpectBetter namespace, and get to testing!
 
 Expectations
 ========================
