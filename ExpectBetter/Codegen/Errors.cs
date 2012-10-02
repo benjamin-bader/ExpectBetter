@@ -5,9 +5,9 @@ using System.Text;
 
 namespace ExpectBetter.Codegen
 {
-    public static class Errors
+    internal static class Errors
     {
-        private const string BugReportMessage = "If you see this message, you have encounted a bug in ExpectBetterations.  Please report this error (and stack trace) to the developers at https://github.com/benjamin-bader/ExpectBetter.  Thanks, and we're sorry!";
+        private const string BugReportMessage = "If you see this message, you have encounted a bug in ExpectBetter.  Please report this error (and stack trace) to the developers at https://github.com/benjamin-bader/ExpectBetter.  Thanks, and we're sorry!";
 
         public static void IllegalNullActual()
         {

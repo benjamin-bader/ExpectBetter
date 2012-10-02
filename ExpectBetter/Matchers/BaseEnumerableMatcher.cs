@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using ExpectBetter.Matchers;
+using ExpectBetter.Collections;
+using System.Diagnostics;
 
 namespace ExpectBetter.Matchers
 {
@@ -24,26 +25,38 @@ namespace ExpectBetter.Matchers
         where TEnumerable : IEnumerable<TItem>
         where M : BaseEnumerableMatcher<TEnumerable, TItem, M>
     {
+        /// <summary>
+        /// Expect the enumerable to contain no elements.
+        /// </summary>
         public virtual bool ToBeEmpty()
         {
             return actual.Count() == 0;
         }
 
+        /// <summary>
+        /// Expect the enumerable to contain the given item.
+        /// </summary>
+        /// <remarks>
+        /// Uses the default equality comparer for <typeparamref name="TItem"/>.
+        /// </remarks>
+        /// <param name="expected">
+        /// The expected item.
+        /// </param>
         public virtual bool ToContain(TItem expected)
         {
-            var comparer = EqualityComparer<TItem>.Default;
-
-            foreach (var element in actual)
-            {
-                if (comparer.Equals(element, expected))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return ToContain(expected, EqualityComparer<TItem>.Default);
         }
 
+        /// <summary>
+        /// Expect the enumerable to contain the given item, using a provided
+        /// equality comparer.
+        /// </summary>
+        /// <param name="expected">
+        /// The expected item.
+        /// </param>
+        /// <param name="comparer">
+        /// The equality comparer to use in testing for item membership.
+        /// </param>
         public virtual bool ToContain(TItem expected, IEqualityComparer<TItem> comparer)
         {
             if (comparer == null)
@@ -62,19 +75,36 @@ namespace ExpectBetter.Matchers
             return false;
         }
 
+        /// <summary>
+        /// Expect the enumerable to contain a number of items in the given
+        /// ordering.  Other items in between are acceptable.
+        /// </summary>
+        /// <remarks>
+        /// Uses the default equality comparer for <typeparamref name="TItem"/>.
+        /// </remarks>
+        /// <param name="expected">
+        /// The items expected to be present.
+        /// </param>
         public virtual bool ToContainInOrder(IEnumerable<TItem> expected)
         {
             return ToContainInOrder(expected, EqualityComparer<TItem>.Default);
         }
 
+        /// <summary>
+        /// Expect the enumerable to contain a number of items in the given
+        /// ordering, using the given equality comparer.  Other items in
+        /// between are acceptable.
+        /// </summary>
+        /// <param name="expected">
+        /// The items expected to be present.
+        /// </param>
+        /// <param name="comparer">
+        /// The equality comparer to use in testing for item membership.
+        /// </param>
         public virtual bool ToContainInOrder(IEnumerable<TItem> expected, IEqualityComparer<TItem> comparer)
         {
-            IEnumerator<TItem> actualEnumerator = null, expectedEnumerator = null;
-
-            try
+            return EnumerateTwo(actual, expected, (actualEnumerator, expectedEnumerator) =>
             {
-                actualEnumerator = actual.GetEnumerator();
-                expectedEnumerator = expected.GetEnumerator();
                 var hasMoreExpected = expectedEnumerator.MoveNext();
 
                 if (comparer == null)
@@ -91,6 +121,63 @@ namespace ExpectBetter.Matchers
                 }
 
                 return !hasMoreExpected;
+            });
+        }
+
+        /// <summary>
+        /// Expect the enumerable to contain only the given items.
+        /// </summary>
+        /// <param name="expected">
+        /// The expected items.
+        /// </param>
+        public virtual bool ToContainExactly(IEnumerable<TItem> expected)
+        {
+            return ToContainExactly(expected, EqualityComparer<TItem>.Default);
+        }
+
+        /// <summary>
+        /// Expect the enumerable to contain only the given items, using the
+        /// given equality comparer.
+        /// </summary>
+        /// <param name="expected">
+        /// The expected items.
+        /// </param>
+        /// <param name="comparer">
+        /// The comparer used to determine item membership.
+        /// </param>
+        public virtual bool ToContainExactly(IEnumerable<TItem> expected, IEqualityComparer<TItem> comparer)
+        {
+            var bag = new CountingBag<TItem>(actual, comparer);
+
+            foreach (var item in expected)
+            {
+                if (!bag.Remove(item))
+                    return false;
+            }
+
+            return bag.Count == 0;
+        }
+
+        private delegate bool DualEnumeratorPredicate(IEnumerator<TItem> actualEnumerator, IEnumerator<TItem> expectedEnumerator);
+
+        /// <summary>
+        /// Applies a predicate to two enumerables and returns the result.
+        /// </summary>
+        /// <param name="actual"></param>
+        /// <param name="expected"></param>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        private static bool EnumerateTwo(IEnumerable<TItem> actual, IEnumerable<TItem> expected, DualEnumeratorPredicate method)
+        {
+            IEnumerator<TItem> actualEnumerator = null,
+                               expectedEnumerator = null;
+
+            try
+            {
+                actualEnumerator = actual.GetEnumerator();
+                expectedEnumerator = expected.GetEnumerator();
+
+                return method(actualEnumerator, expectedEnumerator);
             }
             finally
             {

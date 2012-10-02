@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 using ExpectBetter;
 
-namespace ExpectBetterTests
+namespace ExpectBetterTests.Matchers
 {
     [TestFixture]
     public class NumericMatcherTests

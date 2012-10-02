@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 
 using ExpectBetter;
+using ExpectBetterTests.Collections;
+using ExpectBetterTests.Matchers;
 
 namespace ExpectBetterTests
 {
@@ -29,6 +31,15 @@ namespace ExpectBetterTests
             try
             {
                 tests.ToContain_WhenExpectedNotInEnumerable_Throws();
+            }
+            catch (ExpectationException)
+            {
+
+            }
+
+            try
+            {
+                new ExpectBetterTests.Collections.CountingBagTests().Add_IncrementsDuplicateCount();
             }
             catch (ExpectationException)
             {

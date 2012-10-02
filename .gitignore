@@ -6,3 +6,4 @@ test-results/
 obj/
 *.nupkg
 package/
+packages/

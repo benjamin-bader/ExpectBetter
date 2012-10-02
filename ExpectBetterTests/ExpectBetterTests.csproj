@@ -38,14 +38,15 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="EnumerableMatcherTests.cs" />
+    <Compile Include="Collections\CountingBagTests.cs" />
     <Compile Include="ExpectTests.cs" />
-    <Compile Include="NumericMatcherTests.cs" />
+    <Compile Include="Matchers\EnumerableMatcherTests.cs" />
+    <Compile Include="Matchers\FunctionMatcherTests.cs" />
+    <Compile Include="Matchers\NumericMatcherTests.cs" />
+    <Compile Include="Matchers\ObjectMatcherTests.cs" />
+    <Compile Include="Matchers\StringMatcherTest.cs" />
     <Compile Include="Runner.cs" />
-    <Compile Include="StringMatcherTest.cs" />
     <Compile Include="Factory.cs" />
-    <Compile Include="FunctionMatcherTests.cs" />
-    <Compile Include="ObjectMatcherTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -54,4 +55,5 @@
       <Name>ExpectBetter</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
 </Project>

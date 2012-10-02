@@ -9,7 +9,8 @@ namespace ExpectBetter.Codegen
 {
     internal static class ClassWrapper
     {
-        private const string AssemblyName = "ExpectBetterWrappers";
+        internal const string AssemblyName = "ExpectBetterWrappers";
+        
         private const string AssemblyFileName = AssemblyName + ".dll";
         private const string WrapperPrefix = "WrapperOf$";
 

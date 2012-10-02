@@ -13,16 +13,25 @@ namespace ExpectBetter.Matchers
     /// </typeparam>
     public class ComparableMatcher<T> : BaseObjectMatcher<IComparable<T>, ComparableMatcher<T>>
     {
+        /// <summary>
+        /// Expect the value to equal an expected value.
+        /// </summary>
         public virtual bool ToEqual(T expected)
         {
             return actual.CompareTo(expected) == 0;
         }
 
+        /// <summary>
+        /// Expect the value to be less than a given value.
+        /// </summary>
         public virtual bool ToBeLessThan(T expected)
         {
             return actual.CompareTo(expected) < 0;
         }
 
+        /// <summary>
+        /// Expect the value to be greater than a given value.
+        /// </summary>
         public virtual bool ToBeGreaterThan(T expected)
         {
             return actual.CompareTo(expected) > 0;

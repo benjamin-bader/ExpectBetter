@@ -5,7 +5,7 @@ using NUnit.Framework;
 using ExpectBetter;
 using ExpectBetter.Matchers;
 
-namespace ExpectBetterTests
+namespace ExpectBetterTests.Matchers
 {
     [TestFixture]
     public class StringMatcherTest
@@ -27,12 +27,7 @@ namespace ExpectBetterTests
             var expected = actual.Substring(expectedLen);
             var result = matcher.ToContain(expected);
 
-            // todo(ben): InvalidProgramException at .ToBeTrue(), IL_002d: call 0x0a000006
-            // This is the issue currently plaguing value type matchers - monodis chokes on
-            // generated constructors before ever getting to 
-            // Since we're here, we can assume that .ToContain didn't throw, so this isn't the end of the world.
-            // Expect.The(result).ToBeTrue();
-            Assert.IsTrue(result);
+            Expect.The(result).ToBeTrue();
         }
 
         [Test]
@@ -58,7 +53,7 @@ namespace ExpectBetterTests
             var expected = Factory.RandomString(actual.Length - 1);
             var result = matcher.ToBeLongerThan(expected);
 
-            Assert.IsTrue(result);
+            Expect.The(result).ToBeTrue();
         }
 
         [Test, ExpectedException(typeof(ExpectationException))]
@@ -81,7 +76,63 @@ namespace ExpectBetterTests
             var expected = Factory.RandomString(actual.Length * 2, actual.Length + 1);
             var result = matcher.Not.ToBeLongerThan(expected);
 
-            Assert.IsTrue(result);
+            Expect.The(result).ToBeTrue();
+        }
+
+        [Test]
+        public void ToBeNullOrEmpty_WhenNull_ReturnsTrue()
+        {
+            var actual = null as string;
+            Expect.The(actual).ToBeNullOrEmpty();
+        }
+
+        [Test]
+        public void ToBeNullOrEmpty_WhenEmpty_ReturnsTrue()
+        {
+            var actual = string.Empty;
+            Expect.The(actual).ToBeNullOrEmpty();
+        }
+
+        [Test, ExpectedException(typeof(ExpectationException))]
+        public void ToBeNullOrEmpty_WhenWhitespace_Throws()
+        {
+            var actual = " ";
+            Expect.The(actual).ToBeNullOrEmpty();
+        }
+
+        [Test, ExpectedException(typeof(ExpectationException))]
+        public void ToBeNullOrEmpty_WhenNonEmpty_Throws()
+        {
+            var actual = "?";
+            Expect.The(actual).ToBeNullOrEmpty();
+        }
+
+        [Test]
+        public void ToBeNullOrWhitespace_WhenNull_ReturnsTrue()
+        {
+            var actual = null as string;
+            Expect.The(actual).ToBeNullOrWhitespace();
+        }
+
+        [Test]
+        public void ToBeNullOrWhitespace_WhenEmpty_ReturnsTrue()
+        {
+            var actual = string.Empty;
+            Expect.The(actual).ToBeNullOrWhitespace();
+        }
+
+        [Test]
+        public void ToBeNullOrWhitespace_WhenWhitespace_ReturnsTrue()
+        {
+            var actual = " ";
+            Expect.The(actual).ToBeNullOrWhitespace();
+        }
+
+        [Test, ExpectedException(typeof(ExpectationException))]
+        public void ToBeNullOrWhitespace_WhenNonEmpty_Throws()
+        {
+            var actual = "?";
+            Expect.The(actual).ToBeNullOrWhitespace();
         }
     }
 }

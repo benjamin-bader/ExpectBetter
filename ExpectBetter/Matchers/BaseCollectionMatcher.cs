@@ -23,21 +23,34 @@ namespace ExpectBetter
         where TCollection : ICollection<TItem>
         where M : BaseCollectionMatcher<TCollection, TItem, M>
     {
+        /// <summary>
+        /// Expect the collection to have a given number of elements.
+        /// </summary>
         public virtual bool ToNumber(int expectedCount)
         {
             return actual.Count == expectedCount;
         }
 
+        /// <summary>
+        /// Expect the collection to have at minimum a given number of elements.
+        /// </summary>
         public virtual bool ToNumberAtLeast(int expected)
         {
             return actual.Count >= expected;
         }
 
+        /// <summary>
+        /// Expect the collection to have no elements.
+        /// </summary>
+        /// <returns></returns>
         public override bool ToBeEmpty()
         {
             return actual.Count == 0;
         }
 
+        /// <summary>
+        /// Expect the collection to have a given item.
+        /// </summary>
         public override bool ToContain(TItem item)
         {
             return actual.Contains(item);
