@@ -12,6 +12,47 @@ Expect.The(listOfStuff).ToContainInOrder("foo", "bar", "qux");
 
 ExpectBetter allows you to write tests that say what you mean while still using the frameworks you already know.  Taking a cue from great-expectations and Hamcrest, ExpectBetter lets you compose matchers for the types you own.  What's more, matchers both built-in and bespoke are always at your fingertips via type inferencing and IDE autocompletion - you'll never again need to resort to documentation to discover assertions.
 
+Example
+========================
+
+Here's what ExpectBetter looks like when used in an NUnit fixture (excerpted from this project):
+
+```csharp
+using System;
+
+using NUnit.Framework;
+
+using ExpectBetter;
+using ExpectBetter.Matchers;
+
+namespace ExpectBetterTests.Matchers
+{
+    [TestFixture]
+    public class StringMatcherTest
+    {
+        string actual;
+        StringMatcher matcher;
+
+        [SetUp]
+        public void Setup()
+        {
+            actual = Factory.RandomString(20, 5);
+            matcher = Expect.The(actual);
+        }
+
+        [Test]
+        public void ToContain_WhenExpectedIsContained_ReturnsTrue()
+        {
+            var expectedLen = Math.Min(actual.Length / 2 + 1, actual.Length);
+            var expected = actual.Substring(expectedLen);
+            var result = matcher.ToContain(expected);
+
+            Expect.The(result).ToBeTrue();
+        }
+    }
+}
+```
+
 Get Started
 ========================
 If you use NuGet: `Install-Package ExpectBetter` in the Package Management Console for your test projects.
