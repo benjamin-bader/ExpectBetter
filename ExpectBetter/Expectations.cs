@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace ExpectBetter
+﻿namespace ExpectBetter
 {
     public class Expectations
     {
@@ -27,7 +22,7 @@ namespace ExpectBetter
         public static M Wrap<T, M>(T actual)
             where M : BaseMatcher<T, M>
         {
-            return ExpectBetter.Codegen.ClassWrapper.Wrap<T, M>(actual);
+            return Codegen.ClassWrapper.Wrap<T, M>(actual);
         }
     }
 }

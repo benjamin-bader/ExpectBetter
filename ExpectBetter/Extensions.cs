@@ -145,7 +145,7 @@ namespace ExpectBetter
 
             if (interjection == null)
             {
-                throw new ArgumentNullException("other");
+                throw new ArgumentNullException("interjection");
             }
 
             var thisIter = collection.GetEnumerator();

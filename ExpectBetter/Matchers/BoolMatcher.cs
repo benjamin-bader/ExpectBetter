@@ -1,7 +1,5 @@
 using System;
 
-using ExpectBetter.Matchers;
-
 namespace ExpectBetter.Matchers
 {
     /// <summary>
@@ -14,7 +12,7 @@ namespace ExpectBetter.Matchers
         /// </summary>
         public virtual bool ToBeTrue()
         {
-            return actual == true;
+            return actual;
         }
 
         /// <summary>

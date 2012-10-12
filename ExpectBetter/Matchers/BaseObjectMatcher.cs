@@ -53,7 +53,7 @@ namespace ExpectBetter.Matchers
         /// <typeparamref name="TExpected"/>.
         /// </summary>
         /// <remarks>
-        /// This is true if an instance of <typeparamref name="TException"/> is
+        /// This is true if an instance of <typeparamref name="TExpected"/> is
         /// assignable from an instance of the runtime type of the value.
         /// </remarks>
         /// <typeparam name="TExpected">
@@ -62,7 +62,8 @@ namespace ExpectBetter.Matchers
         public virtual bool ToBeAnInstanceOf<TExpected>()
         {
             expectedDescription = typeof(TExpected).FullName;
-            return typeof(TExpected).IsAssignableFrom(actual.GetType());
+
+            return actual is TExpected;
         }
     }
 }

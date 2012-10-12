@@ -14,7 +14,7 @@ namespace ExpectBetter.Codegen
         private const string AssemblyFileName = AssemblyName + ".dll";
         private const string WrapperPrefix = "WrapperOf$";
 
-        private static Dictionary<Type, Type> WrappedTypes = new Dictionary<Type, Type>();
+        private static readonly Dictionary<Type, Type> WrappedTypes = new Dictionary<Type, Type>();
         
         private static readonly AssemblyName assemblyName;
         internal static readonly AssemblyBuilder assemblyBuilder;
@@ -82,7 +82,7 @@ namespace ExpectBetter.Codegen
         /// </typeparam>
         /// <typeparam name='M'>
         /// The type of the matcher to be wrapped.  Must derive from
-        /// <see cref="BaseMatcher"/>.
+        /// <see cref="BaseMatcher&lt;T, M&gt;"/>.
         /// </typeparam>
         private static Type RetrieveWrapper<T, M>()
             where M : BaseMatcher<T, M>

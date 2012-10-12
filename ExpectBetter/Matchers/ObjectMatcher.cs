@@ -1,7 +1,3 @@
-using System;
-
-using ExpectBetter.Matchers;
-
 namespace ExpectBetter.Matchers
 {
     /// <summary>

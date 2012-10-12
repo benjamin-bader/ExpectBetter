@@ -37,9 +37,9 @@ namespace ExpectBetter
             return Expectations.Wrap<ICollection<T>, CollectionMatcher<T>>(actual);
         }
 
-        public static DictionaryMatcher<K, V> The<K, V>(IDictionary<K, V> actual)
+        public static DictionaryMatcher<TKey, TValue> The<TKey, TValue>(IDictionary<TKey, TValue> actual)
         {
-            return Expectations.Wrap<IDictionary<K, V>, DictionaryMatcher<K, V>>(actual);
+            return Expectations.Wrap<IDictionary<TKey, TValue>, DictionaryMatcher<TKey, TValue>>(actual);
         }
 
         public static BoolMatcher The(bool actual)

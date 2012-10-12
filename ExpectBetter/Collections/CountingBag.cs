@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ExpectBetter.Collections
 {
@@ -17,7 +16,7 @@ namespace ExpectBetter.Collections
     {
         private readonly Dictionary<T, int> dictionary;
 
-        private int totalCount = 0;
+        private int totalCount;
 
         public CountingBag()
             : this(Enumerable.Empty<T>(), EqualityComparer<T>.Default)

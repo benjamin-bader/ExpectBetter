@@ -1,6 +1,6 @@
 using System;
 
-namespace ExpectBetter
+namespace ExpectBetter.Matchers
 {
     /// <summary>
     /// Exposes test methods on <see cref="DateTime"/> values.

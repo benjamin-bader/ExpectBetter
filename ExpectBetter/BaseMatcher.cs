@@ -1,7 +1,3 @@
-using System;
-
-using ExpectBetter.Matchers;
-
 namespace ExpectBetter
 {
     /// <summary>
@@ -20,7 +16,7 @@ namespace ExpectBetter
         /// <summary>
         /// A value indicating whether this matcher should negate the results
         /// of its test methods; in other words, whether it is the
-        /// <see cref="F:Not"/> value of another matcher.
+        /// <see cref="Not"/> value of another matcher.
         /// </summary>
         protected bool inverted;
 

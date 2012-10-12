@@ -1,7 +1,5 @@
 using System;
 
-using ExpectBetter.Matchers;
-
 namespace ExpectBetter.Matchers
 {
     public class ByteMatcher : BaseMatcher<byte, ByteMatcher>
@@ -182,7 +180,7 @@ namespace ExpectBetter.Matchers
 
         public virtual bool ToEqual(float expected)
         {
-            return actual == expected;
+            return actual.Equals(expected);
         }
 
         public virtual bool ToBePositive()
@@ -230,7 +228,7 @@ namespace ExpectBetter.Matchers
 
         public virtual bool ToEqual(double expected)
         {
-            return actual == expected;
+            return actual.Equals(expected);
         }
 
         public virtual bool ToBePositive()

@@ -1,9 +1,6 @@
-using System;
 using System.Collections.Generic;
 
-using ExpectBetter.Matchers;
-
-namespace ExpectBetter
+namespace ExpectBetter.Matchers
 {
     /// <summary>
     /// Exposes test methods on values implementing
