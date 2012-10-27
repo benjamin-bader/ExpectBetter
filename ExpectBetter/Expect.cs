@@ -17,6 +17,12 @@ namespace ExpectBetter
             return Expectations.Wrap<object, ObjectMatcher>(actual);
         }
 
+        public static NullableMatcher<T> The<T>(T? actual)
+            where T : struct
+        {
+            return Expectations.Wrap<T?, NullableMatcher<T>>(actual);
+        }
+
         public static StringMatcher The(string actual)
         {
             return Expectations.Wrap<string, StringMatcher>(actual);
@@ -125,6 +131,11 @@ namespace ExpectBetter
         public static FunctionMatcher<T> The<T>(Func<T> actual)
         {
             return Expectations.Wrap<Func<T>, FunctionMatcher<T>>(actual);
+        }
+
+        public static TypeMatcher The(Type actual)
+        {
+            return Expectations.Wrap<Type, TypeMatcher>(actual);
         }
     }
 }

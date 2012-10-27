@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 using NUnit.Framework;
 
@@ -66,6 +63,17 @@ namespace ExpectBetterTests.Collections
         }
 
         [Test]
+        public void Remove_RemovesAnItem()
+        {
+            var bag = new CountingBag<string>(new[] { "foo", "bar" });
+            Expect.The(bag).ToContain("bar");
+
+            bag.Remove("bar");
+
+            Expect.The(bag).Not.ToContain("bar");
+        }
+
+        [Test]
         public void Remove_DecrementsDuplicateCount()
         {
             var bag = new CountingBag<int>(new[] { int.MaxValue, int.MaxValue });
@@ -99,6 +107,36 @@ namespace ExpectBetterTests.Collections
             bag.Remove(2);
 
             Expect.The(bag.Count).ToEqual(count - 1);
+        }
+
+        [Test, ExpectedException(typeof(NotSupportedException))]
+        public void CopyTo_IsNotSupported()
+        {
+            var bag = new CountingBag<int>(new[] { 1, 2, 3 });
+            var arr = new int[bag.Count];
+            bag.CopyTo(arr, 0);
+        }
+
+        [Test]
+        public void CountingBag_IsNotReadOnly()
+        {
+            var bag = new CountingBag<int>();
+            Expect.The(bag.IsReadOnly).ToBeFalse();
+        }
+        
+        [Test]
+        public void CountingBag_IsEnumerable()
+        {
+            var items = new[] {"foo", "foo", "bar", "baz"};
+            var bag = new CountingBag<string>(items);
+            var count = 0;
+
+            foreach (var _ in bag)
+            {
+                ++count;
+            }
+
+            Expect.The(count).ToEqual(items.Length);
         }
     }
 }

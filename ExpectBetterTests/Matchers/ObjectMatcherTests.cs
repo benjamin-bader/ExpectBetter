@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using NUnit.Framework;
 
 using ExpectBetter;
-using ExpectBetter.Matchers;
 
 namespace ExpectBetterTests.Matchers
 {
@@ -16,13 +16,13 @@ namespace ExpectBetterTests.Matchers
             Expect.The(null as object).ToBeNull();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToBeNull_WhenActualIsNotNull_Throws()
         {
             Expect.The(new object()).ToBeNull();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void Not_ToBeNull_WhenActualIsNull_Throws()
         {
             Expect.The(null as object).Not.ToBeNull();
@@ -43,7 +43,7 @@ namespace ExpectBetterTests.Matchers
             Expect.The(actual).ToBeTheSameAs(expected);
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToBeTheSameAs_WhenActualDiffersFromExpected_Throws()
         {
             Expect.The(new object()).ToBeTheSameAs(new TypeLoadException());
@@ -53,8 +53,21 @@ namespace ExpectBetterTests.Matchers
         public void ToBeAnInstanceOf_WhenActualHasExpectedType_ReturnsTrue()
         {
             var actual = new Dictionary<string, string>();
+            Expect.The(actual).ToBeAnInstanceOf<Dictionary<string, string>>();
+        }
 
-            Expect.The(actual).ToBeAnInstanceOf<IDictionary<string, string>>();
+        [Test]
+        public void ToBeAnInstanceOf_WhenActualImplementsExpectedInterface_ReturnsTrue()
+        {
+            var actual = new System.Collections.ObjectModel.Collection<int>();
+            Expect.The(actual).ToBeAnInstanceOf<IEnumerable<int>>();
+        }
+
+        [Test]
+        public void ToBeAnInstanceOf_WhenActualInheritsFromExpectedType_ReturnsTrue()
+        {
+            var request = (HttpWebRequest)WebRequest.CreateDefault(new Uri("http://www.google.com"));
+            Expect.The(request).ToBeAnInstanceOf<WebRequest>();
         }
     }
 }

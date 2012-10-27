@@ -23,4 +23,4 @@ using System.Runtime.CompilerServices;
 //[assembly: AssemblyKeyFile("")]
 
 [assembly: InternalsVisibleTo("ExpectBetterTests")]
-[assembly: InternalsVisibleTo(ExpectBetter.Codegen.ClassWrapper.AssemblyName)]
+[assembly: InternalsVisibleTo(ExpectBetter.Codegen.ClassWrapper.AssemblyNameString)]

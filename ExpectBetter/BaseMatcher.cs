@@ -3,15 +3,15 @@ namespace ExpectBetter
     /// <summary>
     /// Represents the attributes common to all matchers.
     /// </summary>
-    /// <typeparam name="T">The type of the value being tested.</typeparam>
-    /// <typeparam name="M">The actual type of the derived matcher.</typeparam>
-    public class BaseMatcher<T, M>
-        where M : BaseMatcher<T, M>
+    /// <typeparam name="TActual">The type of the value being tested.</typeparam>
+    /// <typeparam name="TMatcher">The actual type of the derived matcher.</typeparam>
+    public class BaseMatcher<TActual, TMatcher>
+        where TMatcher : BaseMatcher<TActual, TMatcher>
     {
         /// <summary>
         /// A matcher that negates all defined methods.
         /// </summary>
-        public M Not;
+        public TMatcher Not;
 
         /// <summary>
         /// A value indicating whether this matcher should negate the results
@@ -23,7 +23,7 @@ namespace ExpectBetter
         /// <summary>
         /// The value being tested.
         /// </summary>
-        protected T actual;
+        protected TActual actual;
 
         /// <summary>
         /// When set, specifies a message describing the value being tested.

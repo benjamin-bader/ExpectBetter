@@ -7,3 +7,5 @@ obj/
 *.nupkg
 package/
 packages/
+_ReSharper*
+*.user

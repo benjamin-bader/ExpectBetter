@@ -16,12 +16,12 @@ namespace ExpectBetter
     /// <typeparam name="TItem">
     /// The type of item contained in <typeparamref name="TCollection"/>.
     /// </typeparam>
-    /// <typeparam name="M">
+    /// <typeparam name="TMatcher">
     /// The type of the most-derived matcher.
     /// </typeparam>
-    public class BaseCollectionMatcher<TCollection, TItem, M> : BaseEnumerableMatcher<TCollection, TItem, M>
+    public class BaseCollectionMatcher<TCollection, TItem, TMatcher> : BaseEnumerableMatcher<TCollection, TItem, TMatcher>
         where TCollection : ICollection<TItem>
-        where M : BaseCollectionMatcher<TCollection, TItem, M>
+        where TMatcher : BaseCollectionMatcher<TCollection, TItem, TMatcher>
     {
         /// <summary>
         /// Expect the collection to have a given number of elements.

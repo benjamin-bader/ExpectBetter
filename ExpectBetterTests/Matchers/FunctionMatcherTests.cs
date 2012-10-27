@@ -13,19 +13,19 @@ namespace ExpectBetterTests.Matchers
             Expect.The(delegate { throw new DivideByZeroException(); }).ToThrow<DivideByZeroException>();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ActionMatcher_ToThrow_WhenNoExceptionThrown_Throws()
         {
             Expect.The(delegate { }).ToThrow<Exception>();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ActionMatcher_ToThrow_WhenOtherExceptionThrown_Throws()
         {
             Expect.The(delegate { throw new DivideByZeroException(); }).ToThrow<NotImplementedException>();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ActionMatcher_Not_ToThrow_WhenNamedExceptionThrown_Throws()
         {
             Expect.The(delegate { throw new DivideByZeroException(); }).Not.ToThrow<DivideByZeroException>();
@@ -49,19 +49,19 @@ namespace ExpectBetterTests.Matchers
             Expect.The<int>(delegate { throw new DivideByZeroException(); }).ToThrow<DivideByZeroException>();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void FunctionMatcher_ToThrow_WhenNoExceptionThrown_Throws()
         {
             Expect.The(() => 1).ToThrow<Exception>();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void FunctionMatcher_ToThrow_WhenOtherExceptionThrown_Throws()
         {
             Expect.The<int>(delegate { throw new DivideByZeroException(); }).ToThrow<NotImplementedException>();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void FunctionMatcher_Not_ToThrow_WhenNamedExceptionThrown_Throws()
         {
             Expect.The<int>(delegate { throw new DivideByZeroException(); }).Not.ToThrow<DivideByZeroException>();

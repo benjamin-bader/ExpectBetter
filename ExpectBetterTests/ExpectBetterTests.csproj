@@ -40,13 +40,20 @@
   <ItemGroup>
     <Compile Include="Collections\CountingBagTests.cs" />
     <Compile Include="ExpectTests.cs" />
+    <Compile Include="Matchers\BoolMatcherTests.cs" />
+    <Compile Include="Matchers\CollectionMatcherTests.cs" />
+    <Compile Include="Matchers\ComparableMatcherTests.cs" />
+    <Compile Include="Matchers\DateTimeMatcherTests.cs" />
     <Compile Include="Matchers\EnumerableMatcherTests.cs" />
     <Compile Include="Matchers\FunctionMatcherTests.cs" />
+    <Compile Include="Matchers\NullableMatcherTests.cs" />
     <Compile Include="Matchers\NumericMatcherTests.cs" />
     <Compile Include="Matchers\ObjectMatcherTests.cs" />
     <Compile Include="Matchers\StringMatcherTest.cs" />
+    <Compile Include="Matchers\TypeMatcherTests.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="Factory.cs" />
+    <Compile Include="ThrowsAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

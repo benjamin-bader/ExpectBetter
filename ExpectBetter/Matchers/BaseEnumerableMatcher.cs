@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 using ExpectBetter.Collections;
-using System.Diagnostics;
 
 namespace ExpectBetter.Matchers
 {
@@ -18,19 +16,19 @@ namespace ExpectBetter.Matchers
     /// <typeparam name="TItem">
     /// The type of element contained in <typeparamref name="TEnumerable"/>.
     /// </typeparam>
-    /// <typeparam name="M">
+    /// <typeparam name="TMatcher">
     /// The type of the most-derived matcher.
     /// </typeparam>
-    public class BaseEnumerableMatcher<TEnumerable, TItem, M> : BaseObjectMatcher<TEnumerable, M>
+    public class BaseEnumerableMatcher<TEnumerable, TItem, TMatcher> : BaseObjectMatcher<TEnumerable, TMatcher>
         where TEnumerable : IEnumerable<TItem>
-        where M : BaseEnumerableMatcher<TEnumerable, TItem, M>
+        where TMatcher : BaseEnumerableMatcher<TEnumerable, TItem, TMatcher>
     {
         /// <summary>
         /// Expect the enumerable to contain no elements.
         /// </summary>
         public virtual bool ToBeEmpty()
         {
-            return actual.Count() == 0;
+            return !actual.Any();
         }
 
         /// <summary>
@@ -64,15 +62,7 @@ namespace ExpectBetter.Matchers
                 comparer = EqualityComparer<TItem>.Default;
             }
 
-            foreach (var element in actual)
-            {
-                if (comparer.Equals(element, expected))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return actual.Any(element => comparer.Equals(element, expected));
         }
 
         /// <summary>
@@ -86,6 +76,21 @@ namespace ExpectBetter.Matchers
         /// The items expected to be present.
         /// </param>
         public virtual bool ToContainInOrder(IEnumerable<TItem> expected)
+        {
+            return ToContainInOrder(expected, EqualityComparer<TItem>.Default);
+        }
+
+        /// <summary>
+        /// Expect the enumerable to contain a number of items in the given
+        /// ordering.  Other items in between are acceptable.
+        /// </summary>
+        /// <remarks>
+        /// Uses the default equality comparer for <typeparamref name="TItem"/>.
+        /// </remarks>
+        /// <param name="expected">
+        /// The items expected to be present.
+        /// </param>
+        public virtual bool ToContainInOrder(params TItem[] expected)
         {
             return ToContainInOrder(expected, EqualityComparer<TItem>.Default);
         }
@@ -136,6 +141,17 @@ namespace ExpectBetter.Matchers
         }
 
         /// <summary>
+        /// Expect the enumerable to contain only the given items.
+        /// </summary>
+        /// <param name="expected">
+        /// The expected items.
+        /// </param>
+        public virtual bool ToContainExactly(params TItem[] expected)
+        {
+            return ToContainExactly(expected, EqualityComparer<TItem>.Default);
+        }
+
+        /// <summary>
         /// Expect the enumerable to contain only the given items, using the
         /// given equality comparer.
         /// </summary>
@@ -149,10 +165,9 @@ namespace ExpectBetter.Matchers
         {
             var bag = new CountingBag<TItem>(actual, comparer);
 
-            foreach (var item in expected)
+            if (expected.Any(item => !bag.Remove(item)))
             {
-                if (!bag.Remove(item))
-                    return false;
+                return false;
             }
 
             return bag.Count == 0;

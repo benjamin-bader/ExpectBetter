@@ -3,22 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Text;
 
 namespace ExpectBetter.Codegen
 {
     internal static class ClassWrapper
     {
-        internal const string AssemblyName = "ExpectBetterWrappers";
+        internal const string AssemblyNameString = "ExpectBetterWrappers";
         
-        private const string AssemblyFileName = AssemblyName + ".dll";
+#if DEBUG
+        private const string AssemblyFileName = AssemblyNameString + ".dll";
+#endif
         private const string WrapperPrefix = "WrapperOf$";
 
         private static readonly Dictionary<Type, Type> WrappedTypes = new Dictionary<Type, Type>();
         
-        private static readonly AssemblyName assemblyName;
-        internal static readonly AssemblyBuilder assemblyBuilder;
-        internal static readonly ModuleBuilder moduleBuilder;
+        private static readonly AssemblyName AssemblyName;
+        private static readonly AssemblyBuilder AssemblyBuilder;
+        private static readonly ModuleBuilder ModuleBuilder;
 
         private static readonly MethodInfo IllegalNullActualInfo = typeof(Errors).GetMethod("IllegalNullActual", BindingFlags.Static | BindingFlags.Public);
         private static readonly MethodInfo BadMatchInfo = typeof(Errors).GetMethod("BadMatch", BindingFlags.Static | BindingFlags.Public);
@@ -27,18 +28,18 @@ namespace ExpectBetter.Codegen
         static ClassWrapper()
         {
 #if DEBUG
-            var assemblyBuilderAccess = AssemblyBuilderAccess.RunAndSave;
+            const AssemblyBuilderAccess assemblyBuilderAccess = AssemblyBuilderAccess.RunAndSave;
 #else
-			var assemblyBuilderAccess = AssemblyBuilderAccess.Run;
+			const AssemblyBuilderAccess assemblyBuilderAccess = AssemblyBuilderAccess.Run;
 
 #endif
-            assemblyName = new AssemblyName(AssemblyName);
-            assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, assemblyBuilderAccess);
+            AssemblyName = new AssemblyName(AssemblyNameString);
+            AssemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(AssemblyName, assemblyBuilderAccess);
 
 #if DEBUG
-            moduleBuilder = assemblyBuilder.DefineDynamicModule(AssemblyName, AssemblyFileName);
+            ModuleBuilder = AssemblyBuilder.DefineDynamicModule(AssemblyNameString, AssemblyFileName);
 #else
-            moduleBuilder = assemblyBuilder.DefineDynamicModule(AssemblyName);
+            ModuleBuilder = AssemblyBuilder.DefineDynamicModule(AssemblyNameString);
 #endif
         }
 
@@ -46,28 +47,28 @@ namespace ExpectBetter.Codegen
         internal static void SaveAssembly()
         {
             System.IO.File.Delete(AssemblyFileName);
-            assemblyBuilder.Save(AssemblyFileName);
+            AssemblyBuilder.Save(AssemblyFileName);
         }
 #endif
 
-        internal static M Wrap<T, M>(T actual)
-            where M : BaseMatcher<T, M>
+        internal static TMatcher Wrap<TActual, TMatcher>(TActual actual)
+            where TMatcher : BaseMatcher<TActual, TMatcher>
         {
-            var wrapper = RetrieveWrapper<T, M>();
+            var wrapper = RetrieveWrapper<TActual, TMatcher>();
 
             if (wrapper.ContainsGenericParameters)
             {
                 // HACK wtf - need to validate this!
-                var parameters = typeof(T).GetGenericArguments();
+                var parameters = typeof(TActual).GetGenericArguments();
                 wrapper = wrapper.MakeGenericType(parameters);
             }
 
-            return (M)Activator.CreateInstance(wrapper, new object[] { actual });
+            return (TMatcher)Activator.CreateInstance(wrapper, new object[] { actual });
         }
 
         /// <summary>
         /// Returns a wrapper factory function for a given matcher type
-        /// <typeparamref name="M"/>.
+        /// <typeparamref name="TMatcher"/>.
         /// </summary>
         /// <description>
         /// Wrappers are cached; if no cached wrapper exists, one is generated.
@@ -77,18 +78,18 @@ namespace ExpectBetter.Codegen
         /// creates an instance of the wrapped matcher with the given actual
         /// value.
         /// </returns>
-        /// <typeparam name='T'>
-        /// The type of the 'actual' value tested by matcher <typeparamref name="M"/>.
+        /// <typeparam name='TActual'>
+        /// The type of the 'actual' value tested by matcher <typeparamref name="TMatcher"/>.
         /// </typeparam>
-        /// <typeparam name='M'>
+        /// <typeparam name='TMatcher'>
         /// The type of the matcher to be wrapped.  Must derive from
-        /// <see cref="BaseMatcher&lt;T, M&gt;"/>.
+        /// <see cref="BaseMatcher&lt;TActual, TMatcher&gt;"/>.
         /// </typeparam>
-        private static Type RetrieveWrapper<T, M>()
-            where M : BaseMatcher<T, M>
+        private static Type RetrieveWrapper<TActual, TMatcher>()
+            where TMatcher : BaseMatcher<TActual, TMatcher>
         {
-            var @base = GenericDefinitionOf<M>();
-            Type result = null;
+            var @base = GenericDefinitionOf<TMatcher>();
+            Type result;
 
             if (@base.IsGenericType && !@base.IsGenericTypeDefinition)
             {
@@ -103,8 +104,7 @@ namespace ExpectBetter.Codegen
                 }
             }
 
-            var completedNewType = GenerateWrapper<T>(@base);
-            result = completedNewType;
+            result = GenerateWrapper<TActual>(@base);
 
             lock (WrappedTypes)
             {
@@ -126,7 +126,7 @@ namespace ExpectBetter.Codegen
 
         private static Type GenerateWrapper<T>(Type @base)
         {
-            var builder = moduleBuilder.DefineType(
+            var builder = ModuleBuilder.DefineType(
                 WrapperPrefix + @base.Name,
                 TypeAttributes.Class | TypeAttributes.Sealed | TypeAttributes.Public,
                 @base);
@@ -139,8 +139,10 @@ namespace ExpectBetter.Codegen
                 DefineGenericArguments(genericArgs, parameterBuilders);
             }
 
-            var actual = builder.BaseType.GetField("actual", BindingFlags.Instance | BindingFlags.NonPublic);
-            var inverted = builder.BaseType.GetField("inverted", BindingFlags.Instance | BindingFlags.NonPublic);
+            var actual = @base.GetField("actual", BindingFlags.Instance | BindingFlags.NonPublic);
+            var inverted = @base.GetField("inverted", BindingFlags.Instance | BindingFlags.NonPublic);
+            var actualDescription = @base.GetField("actualDescription", BindingFlags.Instance | BindingFlags.NonPublic);
+            var expectedDescription = @base.GetField("expectedDescription", BindingFlags.Instance | BindingFlags.NonPublic);
             var privateCtor = EmitPrivateConstructor<T>(builder, actual, inverted);
 
             EmitPublicConstructor<T>(builder, privateCtor);
@@ -164,13 +166,13 @@ namespace ExpectBetter.Codegen
                     throw new NotSupportedException("Non-virtual public test method: " + mi.Name);
                 }
 
-                WrapTestMethod<T>(mi, builder, actual, inverted, @base);
+                WrapTestMethod(mi, builder, actual, inverted, actualDescription, expectedDescription);
             }
 
             return builder.CreateType();
         }
 
-        private static void WrapTestMethod<T>(MethodInfo mi, TypeBuilder builder, FieldInfo actual, FieldInfo inverted, Type @base)
+        private static void WrapTestMethod(MethodInfo mi, TypeBuilder builder, FieldInfo actual, FieldInfo inverted, FieldInfo actualDescription, FieldInfo expectedDescription)
         {
             // The strategy here is to override each test method such that it
             // handles nullness properly and blows up when the test method fails.
@@ -252,11 +254,11 @@ namespace ExpectBetter.Codegen
 
             // Description of actual
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldfld, @base.GetField("actualDescription", BindingFlags.Instance | BindingFlags.NonPublic));
+            il.Emit(OpCodes.Ldfld, actualDescription);
 
             // Description of expected
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldfld, @base.GetField("expectedDescription", BindingFlags.Instance | BindingFlags.NonPublic));
+            il.Emit(OpCodes.Ldfld, expectedDescription);
 
             // Inverted
             il.Emit(OpCodes.Ldarg_0);
@@ -370,13 +372,33 @@ namespace ExpectBetter.Codegen
 
             var il = cb.GetILGenerator();
             var lblReturn = il.DefineLabel();
-            var fiNot = typeBuilder.BaseType.GetField("Not", BindingFlags.Instance | BindingFlags.Public);
-            var constructorInfo = typeBuilder.BaseType.GetConstructor(new Type[0]);
+            var baseType = Conditions.CheckNotNull(typeBuilder.BaseType, "typeBulder.BaseType");
+            var not = baseType.GetField("Not", BindingFlags.Instance | BindingFlags.Public);
+
+            var constructorInfo = baseType.GetConstructor(new[] { typeOfActual });
+            var hasConstructor = true;
+
+            if (constructorInfo == null)
+            {
+                constructorInfo = baseType.GetConstructor(new Type[0]);
+                hasConstructor = false;
+            }
+
+            if (not == null)
+            {
+                throw new InvalidOperationException("Something is broken - matcher does not seem to inherit from BaseMatcher - actual type: " + baseType.FullName);
+            }
 
             // <invoke default constructor of the base class>
             if (constructorInfo != null)
             {
                 il.Emit(OpCodes.Ldarg_0);
+
+                if (hasConstructor)
+                {
+                    il.Emit(OpCodes.Ldarg_1);
+                }
+
                 il.Emit(OpCodes.Call, constructorInfo);
             }
 
@@ -394,12 +416,18 @@ namespace ExpectBetter.Codegen
             il.Emit(OpCodes.Ldarg_2);
             il.Emit(OpCodes.Brtrue_S, lblReturn);
 
-            // this.Not = this(arg1, true);
+            // this.Not = new ThisClass(arg1, true);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldc_I4_1);
             il.Emit(OpCodes.Newobj, cb);
-            il.Emit(OpCodes.Stfld, fiNot);
+            il.Emit(OpCodes.Stfld, not);
+
+            // this.Not.Not = this;
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, not);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Stfld, not);
 
             il.MarkLabel(lblReturn);
             il.Emit(OpCodes.Ret);
@@ -421,11 +449,7 @@ namespace ExpectBetter.Codegen
         /// The private constructor to which the new public constructor should
         /// delegate.
         /// </param>
-        /// <returns>
-        /// Returns a <see cref="ConstructorInfo"/> describing the new
-        /// constructor.
-        /// </returns>
-        private static ConstructorInfo EmitPublicConstructor<T>(TypeBuilder typeBuilder, ConstructorInfo privateCtor)
+        private static void EmitPublicConstructor<T>(TypeBuilder typeBuilder, ConstructorInfo privateCtor)
         {
             var typeOfActual = GenericDefinitionOf<T>();
 
@@ -441,8 +465,6 @@ namespace ExpectBetter.Codegen
             il.Emit(OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Call, privateCtor);
             il.Emit(OpCodes.Ret);
-
-            return cb;
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 
 namespace ExpectBetter.Matchers
 {
@@ -28,6 +29,7 @@ namespace ExpectBetter.Matchers
         /// </summary>
         public virtual bool ToHaveKind(DateTimeKind kind)
         {
+            actualDescription = string.Format("{0} (kind = {1})", actual, actual.Kind);
             return actual.Kind == kind;
         }
 
@@ -52,6 +54,7 @@ namespace ExpectBetter.Matchers
         /// </summary>
         public virtual bool ToBeOnA(DayOfWeek dayOfWeek)
         {
+            actualDescription = "A " + actual.DayOfWeek;
             return actual.DayOfWeek == dayOfWeek;
         }
 
@@ -60,6 +63,7 @@ namespace ExpectBetter.Matchers
         /// </summary>
         public virtual bool ToBeInTheMonthOf(int expectedMonth)
         {
+            expectedDescription = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(expectedMonth);
             return actual.Month == expectedMonth;
         }
 

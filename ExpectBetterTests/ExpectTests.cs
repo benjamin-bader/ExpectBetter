@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using NUnit.Framework;
 
 using ExpectBetter;
@@ -39,6 +40,70 @@ namespace ExpectBetterTests
             Expect.The(Expect.The(m)).ToBeAnInstanceOf<DecimalMatcher>();
             Expect.The(Expect.The(ip)).ToBeAnInstanceOf<IntPtrMatcher>();
             Expect.The(Expect.The(uip)).ToBeAnInstanceOf<UIntPtrMatcher>();
+        }
+
+        [Test]
+        public void The_AllowsNegation()
+        {
+            var stringMatcher = Expect.The("foo");
+            var negation = stringMatcher.Not;
+
+            Expect.The(negation).Not.ToBeNull();
+        }
+
+        [Test]
+        public void The_AllowsDoubleNegatives()
+        {
+            var collectionMatcher = Expect.The(new[] { 1, 2, 3 });
+            var negation = collectionMatcher.Not;
+            var doubleNegation = negation.Not;
+
+            Expect.The(doubleNegation).ToBeTheSameAs(collectionMatcher);
+        }
+
+        [Test]
+        public void The_ForAnyInput_ReturnsMatcherSubclass()
+        {
+            var declaredMatcherType = typeof (Expect).GetMethod("The", new[] {typeof (string)}).ReturnType;
+            var actualMatcherType = Expect.The("foo").GetType();
+
+            Expect.The(actualMatcherType).ToInheritFrom(declaredMatcherType);
+        }
+
+        [Test]
+        public void The_WhenMatcherHasConstructor_CallsTheConstructor()
+        {
+            var matcher = Expectations.Wrap<byte, Matcher>(0);
+            Expect.The(matcher.CustomCtorCalled).ToBeTrue();
+            Expect.The(matcher.DefaultCtorCalled).ToBeFalse();
+        }
+
+        public class Matcher : BaseMatcher<byte, Matcher>
+        {
+            private readonly bool customCtorCalled;
+            private readonly bool defaultCtorCalled;
+
+            public bool CustomCtorCalled
+            {
+                get { return customCtorCalled; }
+            }
+
+            public bool DefaultCtorCalled
+            {
+                get { return defaultCtorCalled; }
+            }
+
+            public Matcher()
+            {
+                customCtorCalled = false;
+                defaultCtorCalled = true;
+            }
+
+            public Matcher(byte actual)
+            {
+                customCtorCalled = true;
+                defaultCtorCalled = false;
+            }
         }
     }
 }

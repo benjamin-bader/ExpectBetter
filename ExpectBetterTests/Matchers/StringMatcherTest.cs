@@ -39,7 +39,7 @@ namespace ExpectBetterTests.Matchers
             Expect.The(result).ToBeTrue();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToContain_WhenExpectedIsNotContained_Throws()
         {
             var expected = Factory.RandomString(actual.Length + 10, actual.Length + 1);
@@ -56,14 +56,14 @@ namespace ExpectBetterTests.Matchers
             Expect.The(result).ToBeTrue();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToBeLongerThan_WhenExpectedIsLonger_Throws()
         {
             var expected = Factory.RandomString(actual.Length * 2, actual.Length + 1);
             matcher.ToBeLongerThan(expected);
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void Not_ToBeLongerThan_WhenExpectedIsShorter_Throws()
         {
             var expected = Factory.RandomString(actual.Length - 1);
@@ -93,14 +93,14 @@ namespace ExpectBetterTests.Matchers
             Expect.The(actual).ToBeNullOrEmpty();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToBeNullOrEmpty_WhenWhitespace_Throws()
         {
             var actual = " ";
             Expect.The(actual).ToBeNullOrEmpty();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToBeNullOrEmpty_WhenNonEmpty_Throws()
         {
             var actual = "?";
@@ -128,7 +128,7 @@ namespace ExpectBetterTests.Matchers
             Expect.The(actual).ToBeNullOrWhitespace();
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToBeNullOrWhitespace_WhenNonEmpty_Throws()
         {
             var actual = "?";

@@ -6,14 +6,14 @@ namespace ExpectBetter.Matchers
     /// Exposes matcher methods on <see cref="Object"/>.  Not intended to be
     /// exposed directly; use <see cref="ObjectMatcher"/> instead.
     /// </summary>
-    /// <typeparam name="T">
+    /// <typeparam name="TActual">
     /// The type being tested.
     /// </typeparam>
-    /// <typeparam name="M">
+    /// <typeparam name="TMatcher">
     /// The type of the most-derived matcher.
     /// </typeparam>
-    public class BaseObjectMatcher<T, M> : BaseMatcher<T, M>
-        where M : BaseObjectMatcher<T, M>
+    public class BaseObjectMatcher<TActual, TMatcher> : BaseMatcher<TActual, TMatcher>
+        where TMatcher : BaseObjectMatcher<TActual, TMatcher>
     {
         /// <summary>
         /// Expect the value to be <see langword="null"/>.
@@ -32,7 +32,7 @@ namespace ExpectBetter.Matchers
         /// The expected instance.
         /// </param>
         [AllowNullActual]
-        public virtual bool ToBeTheSameAs(T expected)
+        public virtual bool ToBeTheSameAs(TActual expected)
         {
             return ReferenceEquals(actual, expected);
         }
@@ -43,7 +43,7 @@ namespace ExpectBetter.Matchers
         /// <param name="expected">
         /// The expected value.
         /// </param>
-        public virtual bool ToEqual(T expected)
+        public virtual bool ToEqual(TActual expected)
         {
             return actual.Equals(expected);
         }

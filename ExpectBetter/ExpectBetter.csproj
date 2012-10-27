@@ -51,12 +51,14 @@
     <Compile Include="Codegen\Errors.cs" />
     <Compile Include="Codegen\ILUtils.cs" />
     <Compile Include="Collections\CountingBag.cs" />
+    <Compile Include="Conditions.cs" />
     <Compile Include="ExpectationException.cs" />
     <Compile Include="Expectations.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Expect.cs" />
     <Compile Include="Matchers\BaseObjectMatcher.cs" />
     <Compile Include="Matchers\BoolMatcher.cs" />
+    <Compile Include="Matchers\NullableMatcher.cs" />
     <Compile Include="Matchers\ObjectMatcher.cs" />
     <Compile Include="Matchers\StringMatcher.cs" />
     <Compile Include="Matchers\ComparableMatcher.cs" />
@@ -69,6 +71,7 @@
     <Compile Include="Matchers\BaseEnumerableMatcher.cs" />
     <Compile Include="Matchers\EnumerableMatcher.cs" />
     <Compile Include="Matchers\DateTimeMatcher.cs" />
+    <Compile Include="Matchers\TypeMatcher.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup />

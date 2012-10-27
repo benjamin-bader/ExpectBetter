@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 using NUnit.Framework;
 
@@ -16,54 +15,51 @@ namespace ExpectBetterTests.Matchers
         public void ToContainInOrder_WhenTrue_ReturnsTrue()
         {
             var collection = new[] { 1, 2, 3, 4, 5, 6, 7, 8 }.AsEnumerable();
-            Expect.The(collection).ToContainInOrder(new[] { 2, 4, 6 });
+            Expect.The(collection).ToContainInOrder(2, 4, 6);
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToContainInOrder_WhenNotContainedAtAll_Throws()
         {
             var collection = new[] { 1, 2, 3, 4, 5 }.AsEnumerable();
-            Expect.The(collection).ToContainInOrder(new[] { 7 });
+            Expect.The(collection).ToContainInOrder(7);
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToContainInOrder_WhenContained_InWrongOrder_Throws()
         {
             var collection = new[] { 2, 3, 4 }.AsEnumerable();
-            Expect.The(collection).ToContainInOrder(new[] { 4, 2 });
+            Expect.The(collection).ToContainInOrder(4, 2);
         }
 
         [Test]
         public void ToContainExactly_WhenContentsMatch_ReturnsTrue()
         {
             var collection = new[] { "a", "b", "c" }.AsEnumerable();
-            var items = new List<string>();
 
-            items.Add("a");
-            items.Add("b");
-            items.Add("c");
-
-            Expect.The(collection).ToContainExactly(items);
+            Expect.The(collection).ToContainExactly("a", "b", "c");
         }
 
         [Test]
         public void ToContainExactly_WhenContentsOutOfOrder_ReturnsTrue()
         {
             var collection = new[] { "a", "b", "c" }.AsEnumerable();
-            var items = new List<string>();
 
-            items.Add("a");
-            items.Add("c");
-            items.Add("b");
-
-            Expect.The(collection).ToContainExactly(items);
+            Expect.The(collection).ToContainExactly("a", "c", "b");
         }
 
         [Test]
         public void ToContainExactly_AccountForDuplicates()
         {
             var collection = new[] { "a", "b", "b", "c" }.AsEnumerable();
-            Expect.The(collection).ToContainExactly(new[] { "a", "b", "b", "c" });
+            Expect.The(collection).ToContainExactly("a", "b", "b", "c");
+        }
+
+        [Test, Throws]
+        public void ToContainExactly_WhenNotAllDuplicatesAreExpected_Throws()
+        {
+            var collection = new[] { "a", "b", "b", "c", "c" }.AsEnumerable();
+            Expect.The(collection).ToContainExactly("a", "b", "b", "c");
         }
 
         [Test]
@@ -73,11 +69,11 @@ namespace ExpectBetterTests.Matchers
             Expect.The(collection).ToContainExactly(new[] { "C", "B", "A" }, StringComparer.OrdinalIgnoreCase);
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToContainExactly_WhenContentsDiffer_Throws()
         {
             var collection = new[] { 1, 2, 3, 4 }.AsEnumerable();
-            Expect.The(collection).ToContainExactly(new[] { 2, 3, 4 });
+            Expect.The(collection).ToContainExactly(2, 3, 4);
         }
 
         public class StringLengthEqualityMatcher : IEqualityComparer<string>
@@ -112,7 +108,7 @@ namespace ExpectBetterTests.Matchers
             Expect.The(new[] { firstValue }.AsEnumerable()).ToContain(secondValue, comparer);
         }
 
-        [Test, ExpectedException(typeof(ExpectationException))]
+        [Test, Throws]
         public void ToContain_WhenExpectedNotInEnumerable_Throws()
         {
             var collection = new[] { "wtf", "man" }.AsEnumerable();

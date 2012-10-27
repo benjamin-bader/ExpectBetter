@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -20,7 +22,7 @@ namespace ExpectBetter.Codegen
 
         public static void BadMatch(string actualDesc, string expectedDesc, bool inverted, object actual, string methodName, object[] expectedArgs)
         {
-            actualDesc = "[" + (actualDesc ?? ToStringRespectingNulls(actual)) + "]";
+            actualDesc = "[" + (actualDesc ?? ToStringRespectingNullsAndEnumerables(actual)) + "]";
             expectedDesc = expectedDesc ?? DescriptionOfExpected(expectedArgs);
             var message = new StringBuilder("Failure: ")
                 .Append("Expected ")
@@ -39,18 +41,46 @@ namespace ExpectBetter.Codegen
         private static string DescriptionOfExpected(object[] expectedArgs)
         {
             return expectedArgs
-                .Select(ToStringRespectingNulls)
-                .Select(str => "[" + str + "]")
-                .Interject(new[] { ", " })
-                .Aggregate(new StringBuilder(), (sb, str) => sb.Append(str))
+                .Stringify(ToStringRespectingNullsAndEnumerables)
                 .ToString();
         }
 
-        private static string ToStringRespectingNulls(object obj)
+        private static string ToStringRespectingNullsAndEnumerables(object obj)
         {
-            return ReferenceEquals(obj, null)
-                ? "null"
-                : obj.ToString();
+            if (ReferenceEquals(obj, null))
+            {
+                return "null";
+            }
+
+            if (obj is IEnumerable)
+            {
+                var sb = new StringBuilder("{");
+
+                return (obj as IEnumerable)
+                    .Cast<object>()
+                    .Stringify(o => o.ToString(), sb)
+                    .Append("}")
+                    .ToString();
+            }
+            
+            return obj.ToString();
+        }
+
+        private static StringBuilder Stringify(
+            this IEnumerable<object> collection,
+            Func<object, string> toString,
+            StringBuilder sb = null)
+        {
+            if (sb == null)
+            {
+                sb = new StringBuilder();
+            }
+
+            return collection
+                .Select(toString)
+                .Select(str => "[" + str + "]")
+                .Interject(new[] { ", " })
+                .Aggregate(sb, (sbb, str) => sbb.Append(str));
         }
     }
 }
