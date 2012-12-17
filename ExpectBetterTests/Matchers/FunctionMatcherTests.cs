@@ -78,5 +78,29 @@ namespace ExpectBetterTests.Matchers
         {
             Expect.The(() => 1).Not.ToThrow<Exception>();
         }
+
+        [Test]
+        public void FunctionMatcher_ToReturn_Equatable_WhenEqual_ReturnsTrue()
+        {
+            Expect.The(() => "foo").ToReturn((IEquatable<string>) "foo");
+        }
+
+        [Test, Throws]
+        public void FunctionMatcher_ToReturn_Equatable_WhenNotEqual_Throws()
+        {
+            Expect.The(() => "foo").ToReturn((IEquatable<string>) "bar");
+        }
+
+        [Test]
+        public void FunctionMatcher_ToReturn_WithComparer_WhenEqual_ReturnsTrue()
+        {
+            Expect.The(() => "foo").ToReturn("FOO", StringComparer.OrdinalIgnoreCase);
+        }
+
+        [Test, Throws]
+        public void FunctionMatcher_ToReturn_WithComparer_WhenNotEqual_Throws()
+        {
+            Expect.The(() => "foo").ToReturn("FOO", StringComparer.Ordinal);
+        }
     }
 }

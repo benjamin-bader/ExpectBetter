@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace ExpectBetter.Matchers
 {
@@ -41,6 +42,41 @@ namespace ExpectBetter.Matchers
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Expect the function to return a value considered equal to the given
+        /// <see cref="IEquatable&lt;T&gt;"/>.
+        /// </summary>
+        public virtual bool ToReturn(IEquatable<T> expected)
+        {
+            return ToReturnInternal(expected.Equals);
+        }
+
+        /// <summary>
+        /// Expect the function to return a value considered equal to the
+        /// <paramref name="expected"/> value by the given <paramref name="comparer"/>.
+        /// </summary>
+        public virtual bool ToReturn(T expected, IEqualityComparer<T> comparer = null)
+        {
+            comparer = comparer ?? EqualityComparer<T>.Default;
+            return ToReturnInternal(value => comparer.Equals(value, expected));
+        }
+
+        private bool ToReturnInternal(Predicate<T> predicate)
+        {
+            try
+            {
+                var returnValue = actual();
+                actualDescription = ReferenceEquals(returnValue, null) ? "null" : returnValue.ToString();
+                return predicate(returnValue);
+            }
+            catch (Exception ex)
+            {
+                actualDescription = "a thrown exception of type " + ex.GetType().FullName;
+                return false;
+
+            }
         }
     }
 
