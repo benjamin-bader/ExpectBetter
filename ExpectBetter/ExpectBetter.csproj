@@ -58,6 +58,7 @@
     <Compile Include="Expect.cs" />
     <Compile Include="Matchers\BaseObjectMatcher.cs" />
     <Compile Include="Matchers\BoolMatcher.cs" />
+    <Compile Include="Matchers\EquatableMatcher.cs" />
     <Compile Include="Matchers\NullableMatcher.cs" />
     <Compile Include="Matchers\ObjectMatcher.cs" />
     <Compile Include="Matchers\StringMatcher.cs" />

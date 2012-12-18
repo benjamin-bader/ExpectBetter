@@ -45,6 +45,7 @@
     <Compile Include="Matchers\ComparableMatcherTests.cs" />
     <Compile Include="Matchers\DateTimeMatcherTests.cs" />
     <Compile Include="Matchers\EnumerableMatcherTests.cs" />
+    <Compile Include="Matchers\EquatableMatcherTests.cs" />
     <Compile Include="Matchers\FunctionMatcherTests.cs" />
     <Compile Include="Matchers\NullableMatcherTests.cs" />
     <Compile Include="Matchers\NumericMatcherTests.cs" />

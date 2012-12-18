@@ -17,6 +17,14 @@ namespace ExpectBetter
             return Expectations.Wrap<object, ObjectMatcher>(actual);
         }
 
+        /// <summary>
+        /// Set expectations for an <see cref="IEquatable&lt;T&gt;"/>.
+        /// </summary>
+        public static EquatableMatcher<T> The<T>(IEquatable<T> actual)
+        {
+            return Expectations.Wrap<IEquatable<T>, EquatableMatcher<T>>(actual);
+        }
+
         public static NullableMatcher<T> The<T>(T? actual)
             where T : struct
         {
