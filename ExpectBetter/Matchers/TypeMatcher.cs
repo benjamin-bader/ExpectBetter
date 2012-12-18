@@ -7,6 +7,12 @@ namespace ExpectBetter.Matchers
     /// </summary>
     public class TypeMatcher : BaseObjectMatcher<Type, TypeMatcher>
     {
+        /// <summary>
+        /// Creates an instance of the <see cref="TypeMatcher"/> class.
+        /// </summary>
+        /// <remarks>
+        /// Not intended for direct use in test code.
+        /// </remarks>
         public TypeMatcher(Type actual)
         {
             actualDescription = actual.FullName;

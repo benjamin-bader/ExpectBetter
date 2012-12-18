@@ -1,5 +1,8 @@
 ﻿namespace ExpectBetter
 {
+    /// <summary>
+    /// Exposes common configuration methods.
+    /// </summary>
     public class Expectations
     {
         /// <summary>
