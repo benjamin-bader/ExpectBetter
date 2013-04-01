@@ -71,38 +71,24 @@ namespace ExpectBetterTests
         }
 
         [Test]
-        public void The_WhenMatcherHasConstructor_CallsTheConstructor()
+        public void The_WhenMatcherHasInitializer_CallsTheInitializer()
         {
             var matcher = Expectations.Wrap<byte, Matcher>(0);
-            Expect.The(matcher.CustomCtorCalled).ToBeTrue();
-            Expect.The(matcher.DefaultCtorCalled).ToBeFalse();
+            Expect.The(matcher.CustomInitializerCalled).ToBeTrue();
         }
 
         public class Matcher : BaseMatcher<byte, Matcher>
         {
-            private readonly bool customCtorCalled;
-            private readonly bool defaultCtorCalled;
+            private bool customInitializerCalled;
 
-            public bool CustomCtorCalled
+            public bool CustomInitializerCalled
             {
-                get { return customCtorCalled; }
+                get { return customInitializerCalled; }
             }
 
-            public bool DefaultCtorCalled
+            protected override void Initialize()
             {
-                get { return defaultCtorCalled; }
-            }
-
-            public Matcher()
-            {
-                customCtorCalled = false;
-                defaultCtorCalled = true;
-            }
-
-            public Matcher(byte actual)
-            {
-                customCtorCalled = true;
-                defaultCtorCalled = false;
+                customInitializerCalled = true;
             }
         }
     }

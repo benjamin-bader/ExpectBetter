@@ -15,7 +15,7 @@
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
+    <DefineConstants>DEBUG</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>False</ConsolePause>
@@ -38,20 +38,28 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>
     </AssemblyOriginatorKeyFile>
+    <DefineConstants>NET_40</DefineConstants>
   </PropertyGroup>
   <PropertyGroup>
     <DelaySign>false</DelaySign>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Castle.Core">
+      <HintPath>..\packages\Castle.Core.3.2.0\lib\net35\Castle.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Codegen\ClassWrapper.cs" />
     <Compile Include="AllowNullActualAttribute.cs" />
+    <Compile Include="Codegen\ErrorInterceptor.cs" />
     <Compile Include="Codegen\Errors.cs" />
-    <Compile Include="Codegen\ILUtils.cs" />
+    <Compile Include="Codegen\InversionInterceptor.cs" />
+    <Compile Include="Codegen\MatcherInterceptorSelector.cs" />
+    <Compile Include="Codegen\MatcherProxyGenerationHook.cs" />
+    <Compile Include="Codegen\NullActualInterceptor.cs" />
+    <Compile Include="Codegen\StackTraceUtil.cs" />
     <Compile Include="Collections\CountingBag.cs" />
     <Compile Include="Conditions.cs" />
     <Compile Include="ExpectationException.cs" />

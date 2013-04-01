@@ -13,31 +13,45 @@ namespace ExpectBetter
         /// </summary>
         public TMatcher Not;
 
+        internal void InvokeInitializer()
+        {
+            Initialize();
+        }
+
+        /// <summary>
+        /// When overridden in a derived class, performs any pre-test setup
+        /// required.
+        /// </summary>
+        protected virtual void Initialize()
+        {
+            
+        }
+
         /// <summary>
         /// A value indicating whether this matcher should negate the results
         /// of its test methods; in other words, whether it is the
         /// <see cref="Not"/> value of another matcher.
         /// </summary>
-        protected bool inverted;
+        protected internal bool inverted;
 
         /// <summary>
         /// The value being tested.
         /// </summary>
-        protected TActual actual;
+        protected internal TActual actual;
 
         /// <summary>
         /// When set, specifies a message describing the value being tested.
         /// </summary>
-        protected string actualDescription;
+        protected internal string actualDescription;
 
         /// <summary>
         /// When set, specifies a message describing the expected value.
         /// </summary>
-        protected string expectedDescription;
+        protected internal string expectedDescription;
 
         /// <summary>
         /// When set, specifies a test's failure message.
         /// </summary>
-        protected string failureMessage;
+        protected internal string failureMessage;
     }
 }

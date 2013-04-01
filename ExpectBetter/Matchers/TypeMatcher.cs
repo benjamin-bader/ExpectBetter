@@ -8,12 +8,9 @@ namespace ExpectBetter.Matchers
     public class TypeMatcher : BaseObjectMatcher<Type, TypeMatcher>
     {
         /// <summary>
-        /// Creates an instance of the <see cref="TypeMatcher"/> class.
+        /// Sets a custom description of the actual type being tested.
         /// </summary>
-        /// <remarks>
-        /// Not intended for direct use in test code.
-        /// </remarks>
-        public TypeMatcher(Type actual)
+        protected override void Initialize()
         {
             actualDescription = actual.FullName;
         }
