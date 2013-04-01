@@ -41,6 +41,7 @@
     <Compile Include="Collections\CountingBagTests.cs" />
     <Compile Include="ExpectTests.cs" />
     <Compile Include="Matchers\BoolMatcherTests.cs" />
+    <Compile Include="Matchers\CharMatcherTests.cs" />
     <Compile Include="Matchers\CollectionMatcherTests.cs" />
     <Compile Include="Matchers\ComparableMatcherTests.cs" />
     <Compile Include="Matchers\DateTimeMatcherTests.cs" />

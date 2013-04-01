@@ -27,6 +27,14 @@ namespace ExpectBetter
         }
 
         /// <summary>
+        /// Set expectations for a <see cref="Char"/>;
+        /// </summary>
+        public static CharMatcher The(char actual)
+        {
+            return Expectations.Wrap<char, CharMatcher>(actual);
+        }
+
+        /// <summary>
         /// Set expectations for an <see cref="IEquatable&lt;T&gt;"/>.
         /// </summary>
         public static EquatableMatcher<T> The<T>(IEquatable<T> actual)
