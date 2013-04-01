@@ -194,9 +194,9 @@ FAQ
 
 How does it work?
 ------------------------
-Generics, runtime code generation, and magic - it's a little messy, but feel free to take a look.
+Generics, and runtime code generation courtesy of Castle.DynamicProxy.
 
-Basically, the mechanics of assertions are the same no matter what the language or framework - check a condition, then report an error if the condition doesn't hold.  These mechanics are provided at runtime by a generated wrapper class around each matcher, the result of a call to `Expectations.Wrap<TActual, TMatcher>(TActual actual)`.  The behavior of generated wrappers is straightforward - it implements a null check for actual, invokes the test method, checks the result, and perhaps constructs a meaningful failure message and raises an error.  This is accomplished using the built-in `System.Reflection.Emit` facility - there is no other dependency incurred.
+Basically, the mechanics of assertions are the same no matter what the language or framework - check a condition, then report an error if the condition doesn't hold.  These mechanics are provided at runtime by a generated wrapper class around each matcher, the result of a call to `Expectations.Wrap<TActual, TMatcher>(TActual actual)`.  The behavior of generated wrappers is straightforward - it implements a null check for actual, invokes the test method, checks the result, and perhaps constructs a meaningful failure message and raises an error.
 
 This code requires sufficient .NET privileges to define and run dynamic assemblies; if your test environment has tighter constraints, you may encounter problems.
 
@@ -204,14 +204,8 @@ What if null is a legal value for my object?
 ------------------------
 ExpectBetter is opinionated and dislikes `null`; it would much prefer that some form of `Option<T>` be used instead.  Nevertheless it respects that others feel differently, and so you can add an `[AllowNullActual]` attribute to your test methods.  With this in place, you will no longer get failures when your tested value is `null`.
 
-Known Issues
-================================
-While ExpectBetter works as expected on the CLR, matchers of value-types cause segfaults and InvalidProgramExceptions in Mono, verified on OS X 10.7.4.
-
 Next Steps
 ================================
-* Spies!  For interfaces and virtual methods, at least.
-* Figure out the mono story.
 * Better integration with test frameworks - specify exception type thrown, etc.
 
 Credit Where Credit Is Due
