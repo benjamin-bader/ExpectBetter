@@ -52,7 +52,7 @@ namespace ExpectBetter.Codegen
                 return "null";
             }
 
-            if (obj is IEnumerable)
+            if (obj is IEnumerable && !(obj is string))
             {
                 var sb = new StringBuilder("{");
 
