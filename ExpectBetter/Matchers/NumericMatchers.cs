@@ -328,6 +328,34 @@ namespace ExpectBetter.Matchers
         }
 
         /// <summary>
+        /// Expect the value to be no more than <paramref name="maxUlps"/>
+        /// units of least precision (smallest representable increments) away
+        /// from <paramref name="expected"/>.
+        /// </summary>
+        /// <param name="expected">
+        /// The center of the range in which the value is expected to be.
+        /// </param>
+        /// <param name="maxUlps">
+        /// The maximum number of ULP's the value is allowed to deviate from
+        /// <paramref name="expected"/>.
+        /// </param>
+        /// <seealso href="http://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition"/>
+        public virtual bool ToBeWithinUlpsOf(float expected, long maxUlps = 4)
+        {
+            // Check for exact equality
+            if (actual == expected) return true;
+            // Check for different sign
+            if (Math.Sign(actual) != Math.Sign(expected)) return false;
+            // Obtain integer representation
+            byte[] actualBytes = BitConverter.GetBytes(actual);
+            byte[] expectedBytes = BitConverter.GetBytes(expected);
+            int actualInt = BitConverter.ToInt32(actualBytes, 0);
+            int expectedInt = BitConverter.ToInt32(expectedBytes, 0);
+            // Check ULP difference
+            return Math.Abs(actualInt - expectedInt) < maxUlps;
+        }
+
+        /// <summary>
         /// Expect the value to be a representation of infinity.
         /// </summary>
         public virtual bool ToBeInfinity()
@@ -411,6 +439,34 @@ namespace ExpectBetter.Matchers
         public virtual bool ToBeWithinDeltaOf(double expected, double delta)
         {
             return Math.Abs(actual - expected) < delta;
+        }
+
+        /// <summary>
+        /// Expect the value to be no more than <paramref name="maxUlps"/>
+        /// units of least precision (smallest representable increments) away
+        /// from <paramref name="expected"/>.
+        /// </summary>
+        /// <param name="expected">
+        /// The center of the range in which the value is expected to be.
+        /// </param>
+        /// <param name="maxUlps">
+        /// The maximum number of ULP's the value is allowed to deviate from
+        /// <paramref name="expected"/>.
+        /// </param>
+        /// <seealso href="http://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition"/>
+        public virtual bool ToBeWithinUlpsOf(double expected, long maxUlps = 4)
+        {
+            // Check for exact equality
+            if (actual == expected) return true;
+            // Check for different sign
+            if (Math.Sign(actual) != Math.Sign(expected)) return false;
+            // Obtain integer representation
+            byte[] actualBytes = BitConverter.GetBytes(actual);
+            byte[] expectedBytes = BitConverter.GetBytes(expected);
+            long actualInt = BitConverter.ToInt64(actualBytes, 0);
+            long expectedInt = BitConverter.ToInt64(expectedBytes, 0);
+            // Check ULP difference
+            return Math.Abs(actualInt - expectedInt) < maxUlps;
         }
 
         /// <summary>
