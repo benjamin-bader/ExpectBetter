@@ -54,5 +54,21 @@ namespace ExpectBetterTests.Matchers
         {
             Expect.The((sbyte)120).ToBeLessThan(6);
         }
+
+        [Test]
+        public void Double_ToBeWithinUlpsOf_WhenOutside_ReturnsFalse()
+        {
+            double expected = 27.009489484713203;
+            double actual = 27.009489484713185; // actual - 5 ULP
+            Expect.The(actual).Not.ToBeWithinUlpsOf(expected, 5);
+        }
+
+        [Test]
+        public void Double_ToBeWithinUlpsOf_WhenInside_ReturnsTrue()
+        {
+            double expected = 27.009489484713203;
+            double actual = 27.009489484713185; // actual - 5 ULP
+            Expect.The(actual).ToBeWithinUlpsOf(expected, 6);
+        }
     }
 }
