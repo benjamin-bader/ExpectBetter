@@ -340,7 +340,7 @@ namespace ExpectBetter.Matchers
         /// <paramref name="expected"/>.
         /// </param>
         /// <seealso href="http://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition"/>
-        public virtual bool ToBeWithinUlpsOf(float expected, long maxUlps = 4)
+        public virtual bool ToBeWithinUlpsOf(float expected, int maxUlps = 4)
         {
             // Check for exact equality
             if (actual == expected) return true;
