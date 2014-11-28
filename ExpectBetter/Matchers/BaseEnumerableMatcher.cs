@@ -173,6 +173,49 @@ namespace ExpectBetter.Matchers
             return bag.Count == 0;
         }
 
+        /// <summary>
+        /// Expect the enumerable to be a sequence of the same length and having equal
+        /// elements as the given sequence.
+        /// </summary>
+        /// <param name="expected">
+        /// The expected items.
+        /// </param>
+        /// <param name="comparer">
+        /// The comparer used to determine item equality.  If <see langword="null"/>,
+        /// <see cref="EqualityComparer{TItem}.Default"/> is used.
+        /// </param>
+        public virtual bool ToEnumerateAs(IEnumerable<TItem> expected, IEqualityComparer<TItem> comparer = null)
+        {
+            if (comparer == null)
+            {
+                comparer = EqualityComparer<TItem>.Default;
+            }
+
+            using (var one = actual.GetEnumerator())
+            using (var two = expected.GetEnumerator())
+            {
+                bool hasOne, hasTwo;
+                do
+                {
+                    hasOne = one.MoveNext();
+                    hasTwo = two.MoveNext();
+
+                    if (!hasOne || !hasTwo)
+                    {
+                        break;
+                    }
+
+                    if (!comparer.Equals(one.Current, two.Current))
+                    {
+                        return false;
+                    }
+                }
+                while (hasOne && hasTwo);
+
+                return hasOne == hasTwo;
+            }
+        }
+
         private delegate bool DualEnumeratorPredicate(IEnumerator<TItem> actualEnumerator, IEnumerator<TItem> expectedEnumerator);
 
         /// <summary>
