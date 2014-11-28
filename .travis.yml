@@ -13,4 +13,4 @@ before_install:
 script:
   - nuget restore
   - xbuild
-  - .ci/nunit.sh ExpectBetter.Tests/bin/Debug/ExpectBetter.Tests.dll
+  - .ci/nunit.sh ExpectBetterTests/bin/Debug/ExpectBetterTests.dll
