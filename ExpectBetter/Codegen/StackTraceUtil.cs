@@ -16,8 +16,9 @@ namespace ExpectBetter.Codegen
         internal static void FixStackTrace(Exception ex, int framesToSkip = 1)
         {
 #if NET_40
-            var trace = new StackTrace(ex, framesToSkip, true);
-            fiStackTrace.SetValue(ex, trace.ToString());
+            // TODO(ben): Find a cross-platform way to do this.  Per-platform projects should do it.
+            //var trace = new StackTrace(ex, framesToSkip, true);
+            //fiStackTrace.SetValue(ex, trace.ToString());
 #elif NET_20
 
 #elif MONO

@@ -76,6 +76,35 @@ namespace ExpectBetterTests.Matchers
             Expect.The(collection).ToContainExactly(2, 3, 4);
         }
 
+        [Test]
+        public void ToEnumerateAs_WhenContentIsSame_ReturnsTrue()
+        {
+            var numberArray = new[] { 2, 4, 6, 8 }.AsEnumerable();
+            Expect.The(numberArray).ToEnumerateAs(new List<int> { 2, 4, 6, 8 });
+        }
+
+        [Test]
+        public void ToEnumerateAs_UsesEqualityComparer()
+        {
+            var numberArray = new[] { 2, 4, 6, 8 }.AsEnumerable();
+            var comparer = new DoublingEqualityComparer();
+            Expect.The(numberArray).ToEnumerateAs(new[] { 1, 2, 3, 4 }, comparer);
+        }
+
+        [Test, Throws]
+        public void ToEnumerateAs_WhenContentDiffers_Throws()
+        {
+            var numberArray = new[] { 2, 4, 6, 8 }.AsEnumerable();
+            Expect.The(numberArray).ToEnumerateAs(new[] { 1, 2, 3, 4 });
+        }
+
+        [Test, Throws]
+        public void ToEnumerateAs_WhenExpectedHasDifferentLength_Throws()
+        {
+            var numberArray = new[] { 2, 4, 6, 8 };
+            Expect.The(numberArray).ToEnumerateAs(new[] { 2, 4, 6 });
+        }
+
         public class StringLengthEqualityMatcher : IEqualityComparer<string>
         {
             public bool Equals(string x, string y)
@@ -113,6 +142,30 @@ namespace ExpectBetterTests.Matchers
         {
             var collection = new[] { "wtf", "man" }.AsEnumerable();
             Expect.The(collection).ToContain("hi");
+        }
+
+        class DoublingEqualityComparer : IEqualityComparer<int>
+        {
+            public bool Equals(int x, int y)
+            {
+                if (x < y)
+                {
+                    return (x * 2) == y;
+                }
+                else if (x > y)
+                {
+                    return x == (y * 2);
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            public int GetHashCode(int x)
+            {
+                return x;
+            }
         }
     }
 }
