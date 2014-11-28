@@ -1,5 +1,10 @@
 Expect Better
 ==================================
+
+An expressive and fluent assertion library for C#.
+
+[![Build Status](https://travis-ci.org/benjamin-bader/ExpectBetter.svg?branch=master)](https://travis-ci.org/benjamin-bader/ExpectBetter)
+
 ### Better Unit Testing for .NET
 Would you like your assertions to be shorter and more expressive?  NUnit gets us far, but Assert is limited in what it can express - you can't add to it.  xUnit gets us a little farther, but has the same problem.  We can do better:
 
@@ -173,7 +178,7 @@ Now use your new `Expect` class instead of `ExpectBetter.Expect`, and your match
 Customizing Messages
 ========================
 
-The default error message is generated from the name of your test method; it follows this pattern: "Expected [actual] [method] [expected]".  For example, if `ToHaveBeenModifiedSince` returns false, the error message would be: `Failure: Expected [System.FileInfo] to have been modified since [2012-01-01]`.  Descriptions of actual and expected values are generated with a call to `.ToString()`.  By default, .  That `System.FileInfo` part isn't so informative - what if you want a better message?  Set the `BaseMatcher<T, M>.actualDescription` field.
+The default error message is generated from the name of your test method; it follows this pattern: "Expected [actual] [method] [expected]".  For example, if `ToHaveBeenModifiedSince` returns false, the error message would be: `Failure: Expected [System.FileInfo] to have been modified since [2012-01-01]`.  Descriptions of actual and expected values are generated with a call to `.ToString()`.  That `System.FileInfo` part isn't so informative - what if you want a better message?  Set the `BaseMatcher<T, M>.actualDescription` field.
 
 Let's try:
 
