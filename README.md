@@ -215,4 +215,4 @@ Next Steps
 
 Credit Where Credit Is Due
 ================================
-This is an attempt at a .NET port of [jasmine](http://pivotal.github.com/jasmine/) and [great-expectations](https://github.com/xian/great-expectations), keeping true to the expressiveness of Jasmine, the generics finesse of great-expectations, and to the spirit and practice of .NET development.
+This is an attempt at a .NET port of [jasmine](https://jasmine.github.io/) and [great-expectations](https://github.com/xian/great-expectations), keeping true to the expressiveness of Jasmine, the generics finesse of great-expectations, and to the spirit and practice of .NET development.
